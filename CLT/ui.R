@@ -13,18 +13,18 @@ shinyUI(pageWithSidebar(
     br(),
     
     sliderInput("mu",
-                "Mean (of population dist):",
+                "Mean (of population distribution):",
                 value = 0,
-                min = -100,
-                max = 100),
+                min = -50,
+                max = 50),
     
     br(),
     
     sliderInput("sd",
-                "Standard Distribution (of population dist):",
+                "Standard deviation (of population distribution):",
                 value = 20,
                 min = 1,
-                max = 50),
+                max = 30),
     
     br(),
     
