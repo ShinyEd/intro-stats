@@ -89,6 +89,11 @@ shinyServer(function(input, output) {
     })
 
   
+    output$num.samples = renderText({
+      k = input$k
+      paste0("... continuing to sample ",k,".")
+      })
+
     output$sampling.dist = renderPlot({
       
         distname = switch(input$dist,
