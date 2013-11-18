@@ -44,21 +44,19 @@ shinyServer(function(input, output) {
                 return(replicate(k, sample(pop, n, replace=TRUE)))
               })
   
-
-  
+    # plot 1   
     output$pop.dist = renderPlot({
         distname = switch(input$dist,
-                          rnorm = "Normal population",
-                          rexp = "Right skewed population",
-                          rbeta = "Left skewed population",
-                          runif = "Uniform population")   
+                          rnorm = "Population distribution: Normal",
+                          rexp = "Population distribution: Right skewed",
+                          rbeta = "Population distribution: Left skewed",
+                          runif = "Population distribution: Uniform")   
 
         pop = parent()
         m_pop =  round(mean(pop),2)
         sd_pop = round(sd(pop),2)
         mu = input$mu
 
-        #plot 1   
         pdens=density(pop)
         phist=hist(pop, plot=FALSE)
         if (input$dist == "rnorm"){
@@ -66,7 +64,7 @@ shinyServer(function(input, output) {
             ylim=c(0, max(pdens$y, phist$density)), col=COL[1,2], border = "white", cex.main = 1.5)
           legend_pos = ifelse(mu > 0, "topleft", "topright")
           legend(legend_pos, inset = 0.025, 
-            legend=bquote(atop(Mean~(mu)==.(m_pop),SD~(sigma)==.(sd_pop))), 
+            legend=bquote(atop(mu==.(m_pop),sigma==.(sd_pop))), 
             bty = "n", cex = 1.5, text.col = COL[1], text.font = 2)
         }
         else {
@@ -78,7 +76,7 @@ shinyServer(function(input, output) {
         box()
     })
 
-    #n = sample size
+    # plot 2
     output$sample.dist = renderPlot({    
         par(mfrow=c(3,3))
         x = samples()
@@ -86,31 +84,34 @@ shinyServer(function(input, output) {
         par(mfrow=c(2,4))
         for(i in 1:8){
           BHH2::dotPlot(x[,i], col = COL[2,3], 
-                     main = paste("Sample",i),  xlab = "", pch=19, 
+                     main = paste("Sample",i), cex.main = 1.5,
+                     xlab = "", pch=19, cex.axis = 1.5,
                      ylim = c(0,2), xlim = c(min(-100,x),max(100,x)))
           box()
           mean_samp = round(mean(x[,i]),2)
           sd_samp = round(sd(x[,i]),2)
           legend("topright", 
-                 legend=bquote(atop(Mean~(bar(x))==.(mean_samp),
-                                    SD~(s[x])==.(sd_samp))), 
-                 bty = "n", cex = 1.25, text.font = 2)
-          abline(v=mean_samp, col="darkorchid1",lwd=2)
+                 legend=bquote(atop(bar(x)[.(i)]==.(mean_samp),
+                                    s[.(i)]==.(sd_samp))), 
+                 bty = "n", cex = 1.5, text.font = 2)
+          abline(v=mean_samp, col=COL[2],lwd=2)
         }  
     })
 
+    # text
     output$num.samples = renderText({
       k = input$k
-      paste0("... continuing to sample ",k,".")
+      paste0("... continuing to Sample ",k,".")
       })
 
+    # plot 3
     output$sampling.dist = renderPlot({
       
         distname = switch(input$dist,
-                          rnorm = "Normal population",
-                          rexp  = "Right skewed population",
-                          rbeta = "Left skewed population",
-                          runif = "Uniform population")   
+                          rnorm = "normal population",
+                          rexp  = "right skewed population",
+                          rbeta = "left skewed population",
+                          runif = "uniform population")   
         n = input$n
         k = input$k
 
@@ -128,21 +129,36 @@ shinyServer(function(input, output) {
         nhist=hist(ndist, plot=FALSE)
 
         if (input$dist == "rnorm"){
-          hist(ndist, main=paste("Distribution of means of ", k, 
-                                 " random samples, each\nconsisting of ", n, 
-                                 " observations from a ", distname, sep=""), 
-               xlab="Sample means", freq=FALSE, xlim = c(-100,100), ylim=c(0, max(ndens$y, nhist$density)),
-               col="darkorchid1")
+          hist(ndist, main="Sampling distribution", 
+               xlab="Sample means", freq=FALSE, xlim = c(-100,100), 
+               ylim=c(0, max(ndens$y, nhist$density)),
+               col=COL[2,2], border = "white", cex.main = 1.5)
         }
         else{
           hist(ndist, main=paste("Distribution of means of ", k, 
                                  " random samples, each\nconsisting of ", n, 
                                  " observations from a ", distname, sep=""), 
                xlab="Sample means", freq=FALSE, ylim=c(0, max(ndens$y, nhist$density)),
-               col="darkorchid1")
+               col="darkorchid1", border = "white", cex.main = 1.5)
         }
         lines(ndens, col=COL[2,2], lwd=3)
         legend("topright",legend=paste("Mean =", m_samp, "\nSD =", sd_samp), bg=COL[2,2])
         box()
     })
+
+    # text
+    output$sampling.descr = renderText({
+
+      distname = switch(input$dist,
+                        rnorm = "normal population",
+                        rexp  = "right skewed population",
+                        rbeta = "left skewed population",
+                        runif = "uniform population")   
+
+      k = input$k
+      n = input$n
+      paste("Distribution of means of", k, "random samples,\n
+             each consisting of", n, " observations\n
+             from a", distname)
+      })
 })

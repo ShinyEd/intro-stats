@@ -45,9 +45,11 @@ shinyUI(pageWithSidebar(
   
   mainPanel(
     plotOutput("pop.dist"),
+    br(),
     plotOutput("sample.dist"),
     div(h3(textOutput("num.samples")), align = "center"),
     br(),
-    plotOutput("sampling.dist")
+    plotOutput("sampling.dist"),
+    div(textOutput("sampling.descr"), align = "center")
   )
 ))
