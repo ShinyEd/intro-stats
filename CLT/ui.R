@@ -7,7 +7,7 @@ shinyUI(pageWithSidebar(
   sidebarPanel(
     radioButtons("dist", "Parent distribution (population):",
                  list("Normal" = "rnorm",
-                      "Right skewed" = "rexp",
+                      "Right skewed" = "rlnorm",
                       "Left skewed" = "rbeta",
                       "Uniform" = "runif")),
     br(),
@@ -30,9 +30,9 @@ shinyUI(pageWithSidebar(
     
     sliderInput("n", 
                 "Sample size:", 
-                value = 50,
+                value = 30,
                 min = 2, 
-                max = 1000),
+                max = 500),
     br(),
     
     sliderInput("k", 
@@ -41,7 +41,11 @@ shinyUI(pageWithSidebar(
                 min = 10, 
                 max = 1000),
     br(),
+    
+    helpText(a(href="https://duke.qualtrics.com/SE/?SID=SV_3L8WjmwQo32cVk9", target="_blank", "Rate this app!")),
     helpText(a(href="http://stat.duke.edu/~mc301/shiny/CLT_mean", target="_blank", "View code"))),
+    
+        
   
   mainPanel(
     plotOutput("pop.dist"),
@@ -50,6 +54,8 @@ shinyUI(pageWithSidebar(
     div(h3(textOutput("num.samples")), align = "center"),
     br(),
     plotOutput("sampling.dist"),
-    div(textOutput("sampling.descr"), align = "center")
+    div(textOutput("sampling.descr"), align = "center"),
+    br(),
+    div(h5(textOutput("CLT.descr"), align = "center"))
   )
 ))
