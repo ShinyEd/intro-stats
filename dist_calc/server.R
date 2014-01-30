@@ -5,12 +5,12 @@ source('./helper/normTail.R')
 library(shiny)
 library(openintro)
 
-seed = as.numeric(Sys.time())
+defaults = list("tail" = "lower",
+                "lower_bound" = "open",
+                "upper_bound" = "open")
 
 shinyServer(function(input, output)
 { 
-  print(input)
-
   output$tail = renderUI(
   {
     print("tail")
@@ -40,8 +40,15 @@ shinyServer(function(input, output)
   output$lower_bound = renderUI(
   {
     print("lower bound")
+
     if (input$dist == "rbinom")
     {
+      if (is.null(input$tail))
+      {
+        shiny:::flushReact()
+        return()
+      }
+
       if (input$tail %in% c("both","middle"))
       {
         selectInput(inputId = "lower_bound",
@@ -72,8 +79,15 @@ shinyServer(function(input, output)
   output$upper_bound = renderUI(
   {
     print("upper bound")
+
     if (input$dist == "rbinom")
     {
+      if (is.null(input$tail))
+      {
+        shiny:::flushReact()
+        return()
+      }
+
       if (input$tail == "middle")
       {
         selectInput(inputId = "upper_bound",
@@ -96,57 +110,75 @@ shinyServer(function(input, output)
   output$model = renderUI(
   {
     print("model")
+
+    if (is.null(input$tail)){
+      shiny:::flushReact()
+      return()
+    }
+
     low_less = "<"
     low_greater = ">"
 
     up_less = "<"
     up_greater = ">"
 
-    if (input$dist == "rbinom")
+    if (input$dist == "rbinom" & input$tail != "equal")
     {
-      if (input$tail != "equal")
+      if (is.null(input$lower_bound))
       {
-        if (input$lower_bound == "closed")
-        {
-          low_less = "\u2264"
-          low_greater = "\u2265"
+        shiny:::flushReact()
+        return()
+      }
+
+      if (input$lower_bound == "closed")
+      {
+        low_less = "\u2264"
+        low_greater = "\u2265"
+      }
+
+      if (input$tail %in% c("middle","both"))
+      { 
+        if (is.null(input$upper_bound)){
+          shiny:::flushReact()
+          return()
         }
 
-        if (length(input$upper_bound) != 0)
-        {    
-          if (input$upper_bound == "closed")
-          {
-            up_less = "\u2264"
-            up_greater = "\u2265"
-          }
+        if (input$upper_bound == "closed")
+        {
+          up_less = "\u2264"
+          up_greater = "\u2265"
         }
       }
     }
 
-    if (input$tail == "lower")
+    text = ""
+    if (length(input$tail) != 0)
     {
-      # P(X < a)
-      text = paste0("P(X ", low_less, " a)")
-    }
-    else if (input$tail == "upper")
-    {
-      # P(X > a)
-      text = paste0("P(X ", low_greater, " a)")
-    }
-    else if (input$tail == "middle")
-    {
-      # P(a < X < b)
-      text = paste0("P(a ", low_less, " X ", up_less, " b)")
-    }
-    else if (input$tail == "both")
-    {
-      # P(X < a or X > b)
-      text = paste0("P(X ", low_less, " a or X ", up_greater, " b)")
-    }
-    else if (input$tail == "equal")
-    {
-      # P(X = a)
-      text = paste0("P(X = a)")
+      if (input$tail == "lower")
+      {
+        # P(X < a)
+        text = paste0("P(X ", low_less, " a)")
+      }
+      else if (input$tail == "upper")
+      {
+        # P(X > a)
+        text = paste0("P(X ", low_greater, " a)")
+      }
+      else if (input$tail == "middle")
+      {
+        # P(a < X < b)
+        text = paste0("P(a ", low_less, " X ", up_less, " b)")
+      }
+      else if (input$tail == "both")
+      {
+        # P(X < a or X > b)
+        text = paste0("P(X ", low_less, " a or X ", up_greater, " b)")
+      }
+      else if (input$tail == "equal")
+      {
+        # P(X = a)
+        text = paste0("P(X = a)")
+      }
     }
     helpText(div(text,style="text-indent:20px;font-size:125%;"))
   })
@@ -157,6 +189,7 @@ shinyServer(function(input, output)
 
   output$mean = renderUI(
   {
+    print("mean")
     if (input$dist == "rnorm")
     {
       sliderInput("mu",
@@ -169,6 +202,7 @@ shinyServer(function(input, output)
     
   output$sd = renderUI(
   {
+    print("sd")
     if (input$dist == "rnorm")
     {
       sliderInput("sd",
@@ -186,9 +220,7 @@ shinyServer(function(input, output)
 
   output$df1 = renderUI(
   {
-
-    
-
+    print("df1")
     if (input$dist %in% c("rt","rchisq","rf"))
     {
       sliderInput(ifelse(input$dist %in% c("rt","rchisq"), "df","df1"),
@@ -201,6 +233,7 @@ shinyServer(function(input, output)
   
   output$df2 = renderUI(
   {
+    print("df2")
     if (input$dist == "rf")
     {
       sliderInput("df2",
@@ -218,6 +251,7 @@ shinyServer(function(input, output)
 
   output$n = renderUI(
   {
+    print("n")
     if (input$dist == "rbinom")
     {
       sliderInput("n",
@@ -231,6 +265,7 @@ shinyServer(function(input, output)
 
   output$p = renderUI(
   {
+    print("p")
     if (input$dist == "rbinom")
     {
       sliderInput("p",
@@ -247,6 +282,13 @@ shinyServer(function(input, output)
 
   output$a = renderUI(
   {
+    print("a")
+
+    value = 1
+    min = 0
+    max = 1
+    step = 1
+
     if (input$dist == "rnorm")
     {
       find_normal_step = function(sd)
@@ -254,10 +296,20 @@ shinyServer(function(input, output)
         10^round(log(7*sd/100,10))
       }
 
-      value = input$mu - 1.96 * input$sd
-      min   = input$mu - 4 * input$sd
-      max   = input$mu + 4 * input$sd
-      step  = find_normal_step(input$sd)
+      if (is.null(input$mu) | is.null(input$sd)){
+        shiny:::flushReact()
+        return()
+      }
+
+      mu = input$mu
+      sd = input$sd
+      if (is.null(mu)) mu = 0
+      if (is.null(sd)) sd = 1
+
+      value = mu - 1.96 * sd
+      min   = mu - 4 * sd
+      max   = mu + 4 * sd
+      step  = find_normal_step(sd)
     }
     else if (input$dist == "rt")
     {
@@ -282,6 +334,11 @@ shinyServer(function(input, output)
     }
     else if (input$dist == "rbinom")
     {
+      if (is.null(input$n)){
+        shiny:::flushReact()
+        return()
+      }
+
       value = round(input$n/4)
       min = 0
       max = input$n
@@ -297,8 +354,21 @@ shinyServer(function(input, output)
 
   output$b = renderUI(
   {
+    print("b")
+     
+    if (is.null(input$tail))
+    {
+      shiny:::flushReact()
+      return()
+    }
+    
     if (input$tail %in% c("middle","both"))
     {
+      value = 1
+      min = 0
+      max = 1
+      step = 1
+
       if (input$dist == "rnorm")
       {
         find_normal_step = function(sd)
@@ -306,10 +376,20 @@ shinyServer(function(input, output)
           10^round(log(7*sd/100,10))
         }
 
-        value = input$mu + 1.96 * input$sd
-        min   = input$mu - 4 * input$sd
-        max   = input$mu + 4 * input$sd
-        step  = find_normal_step(input$sd)
+        if (is.null(input$mu) | is.null(input$sd)){
+          shiny:::flushReact()
+          return()
+        }
+
+        mu = input$mu
+        sd = input$sd
+        if (is.null(mu)) mu = 0
+        if (is.null(sd)) sd = 1
+
+        value = mu + 1.96 * sd
+        min   = mu - 4 * sd
+        max   = mu + 4 * sd
+        step  = find_normal_step(sd)
       }
       else if (input$dist == "rt")
       {
@@ -334,6 +414,11 @@ shinyServer(function(input, output)
       }
       else if (input$dist == "rbinom")
       {
+        if (is.null(input$n)){
+          shiny:::flushReact()
+          return()
+        }
+
         value = round(input$n*3/4)
         min = 0
         max = input$n
@@ -355,6 +440,14 @@ shinyServer(function(input, output)
   
   output$plot = renderPlot(
   { 
+    print("plot")
+
+    if (is.null(input$tail) | is.null(input$a))
+    {
+      shiny:::flushReact()
+      return()
+    }
+
     L = NULL
     U = NULL
 
@@ -370,9 +463,14 @@ shinyServer(function(input, output)
     }
     else if (input$tail %in% c("both","middle"))
     {
+      if (is.null(input$b)){
+        shiny:::flushReact()
+        return()
+      }
+      
       L = input$a
       U = input$b
-    
+
       if (L > U)
         error = TRUE
     }
@@ -396,11 +494,23 @@ shinyServer(function(input, output)
 
         if(input$dist == "rnorm")
         {
+          if(is.null(input$mu) | is.null(input$sd))
+          {
+            shiny:::flushReact()
+            return()
+          }
+
           normTail(m=input$mu, s=input$sd, L=L, U=U, M=M, axes=3)
           title(main="Normal Distribution")
         }
         else if (input$dist == "rt")
         {
+          if(is.null(input$df))
+          {
+            shiny:::flushReact()
+            return()
+          }
+
           normTail(m=0, s=1, df=input$df, L=L, U=U, M=M, axes=3)
           title(main="t Distribution")
         }
@@ -417,6 +527,20 @@ shinyServer(function(input, output)
       # }
       else if (input$dist == "rbinom")
       {
+        if(  is.null(input$n)
+           | is.null(input$p)
+           | is.null(input$lower_bound))
+        {
+          shiny:::flushReact()
+          return()
+        }
+
+        if(input$tail %in% c("both","middle") & is.null(input$upper_bound))
+        {
+          shiny:::flushReact()
+          return()
+        }
+
         d = dbinom(0:input$n,input$n,input$p)
 
         plot(0,0,type='n',xlim=c(-0.5,input$n+0.5),ylim=c(0,max(d)),
@@ -426,7 +550,9 @@ shinyServer(function(input, output)
         axis(2)
         title(main=paste("Binomial Distribution"))
 
-        for (k in 1+(0:input$n)) 
+
+
+        for (k in 1:length(d)) 
         {
             col = NA
 
@@ -444,12 +570,12 @@ shinyServer(function(input, output)
             {
               if (k-1 == L) col = "#569BBD"
             }
-            if (input$tail == "both")
+            else if (input$tail == "both")
             {
-              if (input$lower_bound == "open"   & input$upper_bound == "open"   & k-1 <  L & k-1 >  U) col = "#569BBD"
-              if (input$lower_bound == "open"   & input$upper_bound == "closed" & k-1 <  L & k-1 >= U) col = "#569BBD"
-              if (input$lower_bound == "closed" & input$upper_bound == "open"   & k-1 <= L & k-1 >  U) col = "#569BBD"
-              if (input$lower_bound == "closed" & input$upper_bound == "closed" & k-1 <= L & k-1 >= U) col = "#569BBD"
+              if (input$lower_bound == "open"   & input$upper_bound == "open"   & (k-1 <  L | k-1 >  U)) col = "#569BBD"
+              if (input$lower_bound == "open"   & input$upper_bound == "closed" & (k-1 <  L | k-1 >= U)) col = "#569BBD"
+              if (input$lower_bound == "closed" & input$upper_bound == "open"   & (k-1 <= L | k-1 >  U)) col = "#569BBD"
+              if (input$lower_bound == "closed" & input$upper_bound == "closed" & (k-1 <= L | k-1 >= U)) col = "#569BBD"
             }
             else if (input$tail == "middle")
             {
