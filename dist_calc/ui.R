@@ -6,36 +6,44 @@ shinyUI(pageWithSidebar(
   
   sidebarPanel(
     #radio button or dropdown?
-    radioButtons("dist", "Distribution:",
-                 list("Normal" = "rnorm",
-                      "t" = "rt",
-                      "Chi-Squared" = "rchisq",
-                      "F" = "rf",
-                      "Binomial" = "rbinom")),
+
+    selectInput(inputId = "dist",
+                label = "Distribution:",
+                choices = c("Normal"      = "rnorm",
+                            "t"           = "rt",
+                            #"Chi-Squared" = "rchisq",
+                            #"F"           = "rf",
+                            "Binomial"    = "rbinom"),
+                selected = "rnorm"),
+
     br(),
-    
-    uiOutput("slider.mean"),
-    uiOutput("slider.sd"),
-    uiOutput("x.value"),
-    uiOutput("x.lower"),
-    uiOutput("x.upper"),
-    uiOutput("df"),
+
+    uiOutput("mean"),
+    uiOutput("sd"),
     uiOutput("df1"),
     uiOutput("df2"),
-    uiOutput("f.value"),
-    uiOutput("chisq.value"),
     uiOutput("n"),
     uiOutput("p"),
-    uiOutput("k"),
-    
+
     br(),
+    br(),
+
+    helpText("Model:"),
+    uiOutput("model"),
+
+    uiOutput("tail"),
+    uiOutput("lower_bound"),
+    uiOutput("upper_bound"),
     
-    uiOutput("tail")),
+
+    uiOutput("a"),
+    uiOutput("b")  
+  ),
   
   
   
   mainPanel(
-    plotOutput("plot.dist")
-    #tableOutput("area")
+    plotOutput("plot"),
+    uiOutput("area")
   )
 ))
