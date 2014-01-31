@@ -13,7 +13,7 @@ shinyServer(function(input, output)
 { 
   output$tail = renderUI(
   {
-    print("tail")
+    #print("tail")
     if (input$dist == "rbinom")
     {
       selectInput(inputId = "tail",
@@ -39,7 +39,7 @@ shinyServer(function(input, output)
 
   output$lower_bound = renderUI(
   {
-    print("lower bound")
+    #print("lower bound")
 
     if (input$dist == "rbinom")
     {
@@ -78,7 +78,7 @@ shinyServer(function(input, output)
 
   output$upper_bound = renderUI(
   {
-    print("upper bound")
+    #print("upper bound")
 
     if (input$dist == "rbinom")
     {
@@ -107,10 +107,8 @@ shinyServer(function(input, output)
     }
   })
 
-  output$model = renderUI(
+  get_model_text = reactive(
   {
-    print("model")
-
     if (is.null(input$tail)){
       shiny:::flushReact()
       return()
@@ -180,7 +178,15 @@ shinyServer(function(input, output)
         text = paste0("P(X = a)")
       }
     }
-    helpText(div(text,style="text-indent:20px;font-size:125%;"))
+
+    return(text)
+  })
+
+  output$model = renderText(
+  {
+    #print("model")
+
+    get_model_text()
   })
 
   #######################
@@ -189,7 +195,7 @@ shinyServer(function(input, output)
 
   output$mean = renderUI(
   {
-    print("mean")
+    #print("mean")
     if (input$dist == "rnorm")
     {
       sliderInput("mu",
@@ -202,7 +208,7 @@ shinyServer(function(input, output)
     
   output$sd = renderUI(
   {
-    print("sd")
+    #print("sd")
     if (input$dist == "rnorm")
     {
       sliderInput("sd",
@@ -220,7 +226,7 @@ shinyServer(function(input, output)
 
   output$df1 = renderUI(
   {
-    print("df1")
+    #print("df1")
     if (input$dist %in% c("rt","rchisq","rf"))
     {
       sliderInput(ifelse(input$dist %in% c("rt","rchisq"), "df","df1"),
@@ -233,7 +239,7 @@ shinyServer(function(input, output)
   
   output$df2 = renderUI(
   {
-    print("df2")
+    #print("df2")
     if (input$dist == "rf")
     {
       sliderInput("df2",
@@ -251,7 +257,7 @@ shinyServer(function(input, output)
 
   output$n = renderUI(
   {
-    print("n")
+    #print("n")
     if (input$dist == "rbinom")
     {
       sliderInput("n",
@@ -265,7 +271,7 @@ shinyServer(function(input, output)
 
   output$p = renderUI(
   {
-    print("p")
+    #print("p")
     if (input$dist == "rbinom")
     {
       sliderInput("p",
@@ -282,7 +288,7 @@ shinyServer(function(input, output)
 
   output$a = renderUI(
   {
-    print("a")
+    #print("a")
 
     value = 1
     min = 0
@@ -354,7 +360,7 @@ shinyServer(function(input, output)
 
   output$b = renderUI(
   {
-    print("b")
+    #print("b")
      
     if (is.null(input$tail))
     {
@@ -440,7 +446,7 @@ shinyServer(function(input, output)
   
   output$plot = renderPlot(
   { 
-    print("plot")
+    #print("plot")
 
     if (is.null(input$tail) | is.null(input$a))
     {
@@ -591,5 +597,110 @@ shinyServer(function(input, output)
         }
       }
     }
+  })
+
+  ################
+  # Calculations #
+  ################
+
+  output$area = renderText(
+  {
+    if (is.null(input$tail) | is.null(input$a))
+    {
+      shiny:::flushReact()
+      return()
+    }
+
+    L = input$a
+    U = NULL
+
+    if (input$tail %in% c("both","middle")) 
+    {
+      if (is.null(input$b))
+      {
+        shiny:::flushReact()
+        return()
+      }
+
+      U = input$b
+    }
+
+
+    f = function() NULL
+
+    if (input$dist == "rnorm")
+    {
+      if (is.null(input$mu) | is.null(input$sd))
+      {
+        shiny:::flushReact()
+        return()
+      }
+
+      f = function(x) pnorm(x,input$mu,input$sd)
+    }  
+    else if (input$dist == "rt")
+    {
+      if (is.null(input$df1))
+      {
+        shiny:::flushReact()
+        return()
+      }
+
+      f = function(x) pt(x,input$df1)
+    }
+    else if (input$dist == "rbinom")
+    {
+      if (is.null(input$n) | is.null(input$p) | is.null(input$lower_bound))
+      {
+        shiny:::flushReact()
+        return()
+      }
+
+      if (input$tail == "equal")
+      {
+        f = function(x) dbinom(x,input$n,input$p)
+      }
+      else
+      {
+        f = function(x) pbinom(x,input$n,input$p)
+      
+        if (input$tail %in% c("lower","both") & input$lower_bound == "open") L = L-1
+        if (input$tail %in% c("upper")        & input$lower_bound == "closed") L = L-1
+        if (input$tail %in% c("middle")       & input$lower_bound == "closed") L = L-1
+
+        if (input$tail %in% c("both","middle")) 
+        {
+          if (is.null(input$upper_bound))
+          {
+            shiny:::flushReact()
+            return()
+          }
+
+          if (input$tail == "both"   & input$upper_bound == "closed") U = U-1
+          if (input$tail == "middle" & input$upper_bound == "open") U = U-1
+        } 
+      }
+    }
+
+    val = NA
+    if (input$tail == "lower")
+      val = f(L)
+    else if (input$tail == "upper")
+      val = 1-f(L)
+    else if (input$tail == "equal")
+      val = f(L)
+    else if (input$tail == "both")
+      val = f(L) + (1-f(U))
+    else if (input$tail == "middle")
+      val = f(U) - f(L)
+    
+    text = paste(get_model_text(),"=",signif(val,3))
+  
+    
+    text = sub("a",input$a,text)
+    if (input$tail %in% c("both","middle")) 
+      text = sub("b",input$b,text)
+    
+    text
   })
 })

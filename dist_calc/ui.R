@@ -29,7 +29,8 @@ shinyUI(pageWithSidebar(
     br(),
 
     helpText("Model:"),
-    uiOutput("model"),
+    div(textOutput("model"),style="text-indent:20px;font-size:125%;"),
+    br(),
 
     uiOutput("tail"),
     uiOutput("lower_bound"),
@@ -44,6 +45,6 @@ shinyUI(pageWithSidebar(
   
   mainPanel(
     plotOutput("plot"),
-    uiOutput("area")
+    div(textOutput("area"), align = "center", style="font-size:150%;")
   )
 ))
