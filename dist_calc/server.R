@@ -506,7 +506,7 @@ shinyServer(function(input, output)
             return()
           }
 
-          normTail(m=input$mu, s=input$sd, L=L, U=U, M=M, axes=3)
+          normTail(m=input$mu, s=input$sd, L=L, U=U, M=M, axes=3, cex.axis=1.5)
           title(main="Normal Distribution")
         }
         else if (input$dist == "rt")
@@ -517,7 +517,7 @@ shinyServer(function(input, output)
             return()
           }
 
-          normTail(m=0, s=1, df=input$df, L=L, U=U, M=M, axes=3)
+          normTail(m=0, s=1, df=input$df, L=L, U=U, M=M, axes=3, cex.axis=1.5)
           title(main="t Distribution")
         }
       }
@@ -550,10 +550,9 @@ shinyServer(function(input, output)
         d = dbinom(0:input$n,input$n,input$p)
 
         plot(0,0,type='n',xlim=c(-0.5,input$n+0.5),ylim=c(0,max(d)),
-             xlab="",ylab="",cex.axis=2,
-             axes=FALSE)
-        axis(1)
-        axis(2)
+             xlab="",ylab="", axes=FALSE)
+        axis(1, cex.axis=1.5)
+        axis(2, cex.axis=1.5)
         title(main=paste("Binomial Distribution"))
 
 

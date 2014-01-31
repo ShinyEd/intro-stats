@@ -38,7 +38,13 @@ shinyUI(pageWithSidebar(
     
 
     uiOutput("a"),
-    uiOutput("b")  
+    uiOutput("b"),
+    
+    br(),
+    
+    helpText(a(href="https://duke.qualtrics.com/SE/?SID=SV_3L8WjmwQo32cVk9", target="_blank", "Rate this app!")),
+    helpText(a(href="https://github.com/ShinyEd/ShinyEd/tree/master/dist_calc", target="_blank", "View code")),
+    helpText(a(href="http://stat.duke.edu/~mc301/shiny/applets.html", target="_blank", "Check out other apps"))
   ),
   
   
