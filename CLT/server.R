@@ -9,6 +9,7 @@ seed = as.numeric(Sys.time())
 
 shinyServer(function(input, output) {
   
+  
   output$mu = renderUI(
 {
   #print("mean")
@@ -74,7 +75,7 @@ shinyServer(function(input, output) {
   }
 })
   
-  rand_draw = function(dist, n, mu=0, sd=1, min=0, max=1, skew="low") 
+  rand_draw = function(dist, n, mu, sd, min, max, skew) 
   {
     vals = NULL
     if (dist == "rbeta") {
@@ -89,6 +90,7 @@ shinyServer(function(input, output) {
       }
     }     
     else if (dist == "rnorm"){
+      mean = input$mu ; sd = input$sd 
       vals = do.call(dist, list(n=n, mean=mu, sd=sd))
     }    
     else if (dist == "rlnorm"){
@@ -104,17 +106,15 @@ shinyServer(function(input, output) {
     }
     else if (dist == "runif"){
       vals = do.call(dist, list(n=n, min=min, max=max))
-    }
-    
+    }    
     return(vals)
   }
-  rep_rand_draw = repeatable(rand_draw)
   
-  
-  
+  rep_rand_draw = repeatable(rand_draw)  
+    
   parent = reactive({
     n = 1e5
-    return(rep_rand_draw(input$dist,n, input$mu, input$sd, input$min, input$max, input$skew))
+    return(rep_rand_draw(input$dist, n, input$mu, input$sd, input$min, input$max, input$skew))
   })
   
   samples = reactive({
@@ -137,10 +137,14 @@ shinyServer(function(input, output) {
     sd_pop = round(sd(pop),2)
     mu = input$mu
     
-    L = NULL ; U = NULL ; error = FALSE
+    L = NULL
+    U = NULL
+    
+    error = FALSE
     
     if (input$dist == "runif"){
-      L = input$min ; U = input$max
+      L = input$min
+      U = input$max
       if (L > U){
         error = TRUE
       }
@@ -346,10 +350,10 @@ shinyServer(function(input, output) {
       k = input$k
       n = input$n
       paste("Distribution of means of", k, "random samples,\n
-            each consisting of", n, " observations\n
-            from a", distname)
+             each consisting of", n, " observations\n
+             from a", distname)
     }
-    })
+  })
   
   # text
   output$CLT.descr = renderText({
@@ -369,19 +373,19 @@ shinyServer(function(input, output) {
     else{
       pop = parent()
       m_pop =  round(mean(pop),2)
+      s_pop = round(sd(pop),2)
       
       n = input$n
-      mu = input$mu
-      sigma = input$sd
-      se=round(sigma/sqrt(n),2)
+      se=round(s_pop/sqrt(n),2)
       paste("According to the Central Limit Theorem (CLT), the distribution of sample means 
           (the sampling distribution) should be nearly normally distributed. The mean of 
-          the sampling distribution should be approximately equal to the population mean ", 
-            expression(mu), "=", m_pop, "and the standard error (the standard deviation of
-          sample means) should be approximately", expression(sigma), "/sqrt(n) = ", sigma,
-            "/sqrt(",n, ") =", se)
+          the sampling distribution should be approximately equal to the population mean (", m_pop, ") 
+          and the standard error (the standard deviation of
+          sample means) should be approximately equal to the sd of the population divided by square root of
+          sample size (", s_pop,
+            "/sqrt(",n, ") =", se,").")
     }
   })
   
   
-    })
+})

@@ -18,22 +18,6 @@ shinyUI(pageWithSidebar(
     uiOutput("max"),
     uiOutput("skew"),
     
-#     sliderInput("mu",
-#                 "Mean (of population distribution):",
-#                 value = 0,
-#                 min = -50,
-#                 max = 50),
-    
-    br(),
-    
-#     sliderInput("sd",
-#                 "Standard deviation (of population distribution):",
-#                 value = 20,
-#                 min = 1,
-#                 max = 30),
-#     
-    br(),
-    
     sliderInput("n", 
                 "Sample size:", 
                 value = 30,
@@ -43,7 +27,7 @@ shinyUI(pageWithSidebar(
     
     sliderInput("k", 
                 "Number of samples:", 
-                value = 10,
+                value = 200,
                 min = 10, 
                 max = 1000),
     br(),
