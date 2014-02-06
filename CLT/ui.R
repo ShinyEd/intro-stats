@@ -7,25 +7,31 @@ shinyUI(pageWithSidebar(
   sidebarPanel(
     radioButtons("dist", "Parent distribution (population):",
                  list("Normal" = "rnorm",
+                      "Uniform" = "runif",
                       "Right skewed" = "rlnorm",
-                      "Left skewed" = "rbeta",
-                      "Uniform" = "runif")),
+                      "Left skewed" = "rbeta")),
     br(),
     
-    sliderInput("mu",
-                "Mean (of population distribution):",
-                value = 0,
-                min = -50,
-                max = 50),
+    uiOutput("mu"),
+    uiOutput("sd"),
+    uiOutput("min"),
+    uiOutput("max"),
+    uiOutput("skew"),
+    
+#     sliderInput("mu",
+#                 "Mean (of population distribution):",
+#                 value = 0,
+#                 min = -50,
+#                 max = 50),
     
     br(),
     
-    sliderInput("sd",
-                "Standard deviation (of population distribution):",
-                value = 20,
-                min = 1,
-                max = 30),
-    
+#     sliderInput("sd",
+#                 "Standard deviation (of population distribution):",
+#                 value = 20,
+#                 min = 1,
+#                 max = 30),
+#     
     br(),
     
     sliderInput("n", 
@@ -43,7 +49,10 @@ shinyUI(pageWithSidebar(
     br(),
     
     helpText(a(href="https://duke.qualtrics.com/SE/?SID=SV_3L8WjmwQo32cVk9", target="_blank", "Rate this app!")),
-    helpText(a(href="http://stat.duke.edu/~mc301/shiny/CLT_mean", target="_blank", "View code"))),
+    helpText(a(href="http://stat.duke.edu/~mc301/shiny/CLT_mean", target="_blank", "View code")),
+    helpText(a(href="http://stat.duke.edu/~mc301/shiny/applets.html", target="_blank", "Check out other apps")),
+    helpText(a(href="https://www.coursera.org/course/statistics", target="_blank", "Want to learn more for free?"))
+    ),
     
         
   

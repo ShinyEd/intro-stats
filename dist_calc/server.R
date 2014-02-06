@@ -332,9 +332,9 @@ shinyServer(function(input, output)
     }
     else if (input$dist == "rf")
     {
-      value = 1
-      min   = 0
-      max   = 4
+      value = -1.96
+      min   = -6
+      max   = 6
       step  = 0.01
     }
     else if (input$dist == "rchisq")
@@ -412,9 +412,9 @@ shinyServer(function(input, output)
       }
       else if (input$dist == "rf")
       {
-        value = 2
-        min   = 0
-        max   = 4
+        value = -1.96
+        min   = -6
+        max   = 6
         step  = 0.01
       }
       else if (input$dist == "rchisq")
@@ -532,11 +532,20 @@ shinyServer(function(input, output)
       #   chiTail(U=input$chisq.value, df=input$df)
       #   title(main="Chi^2 Distribution")
       # }
-      # else if (input$dist == "rf")
-      # {
-      #   FTail(U=input$f.value, df_n=input$df1, df_d=input$df2)
-      #   title(main="F Distribution")
-      # }
+      else if (input$dist == "rf")
+      {
+        if(is.null(input$df1) | is.null(input$df2))
+        {
+          shiny:::flushReact()
+          return()
+        }
+        
+        L = NULL
+        U = input$a
+        
+        FTail(U=U,df_n=input$df1, df_d=input$df2)
+        title(main="F Distribution")
+      }
       else if (input$dist == "rbinom")
       {
         if(  is.null(input$n)
@@ -652,6 +661,15 @@ shinyServer(function(input, output)
       }
 
       f = function(x) pt(x,input$df1)
+    }
+    else if (input$dist == "rf"){
+      if (is.null(input$df1) | is.null(input$df2))
+      {
+        shiny:::flushReact()
+        return()
+      }
+      
+      f = function(x) pf(x,input$df1,input$df2)
     }
     else if (input$dist == "rbinom")
     {
