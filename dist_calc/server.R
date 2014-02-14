@@ -31,6 +31,12 @@ shinyServer(function(input, output)
                               "Equality"="equal"),
                   selected = "lower")
     }
+    else if (input$dist == "rf" | input$dist == "rchisq"){
+      selectInput(inputId = "tail",
+                  label = "Find Area:",
+                  choices = c("Upper Tail"="upper"),
+                  selected = "upper")
+    }
     else
     {
       selectInput(inputId = "tail",
@@ -332,10 +338,10 @@ shinyServer(function(input, output)
     }
     else if (input$dist == "rf")
     {
-      value = -1.96
-      min   = -6
-      max   = 6
-      step  = 0.01
+      value = 1.5
+      min   = 0
+      max   = 4
+      step  = 0.1
     }
     else if (input$dist == "rchisq")
     {
@@ -408,20 +414,6 @@ shinyServer(function(input, output)
         value = 1.96 
         min   = -6
         max   = 6
-        step  = 0.1
-      }
-      else if (input$dist == "rf")
-      {
-        value = -1.96
-        min   = -6
-        max   = 6
-        step  = 0.01
-      }
-      else if (input$dist == "rchisq")
-      {
-        value = 20
-        min   = 0
-        max   = 30
         step  = 0.1
       }
       else if (input$dist == "rbinom")
@@ -527,25 +519,43 @@ shinyServer(function(input, output)
           title(main="t Distribution")
         }
       }
-      # else if (input$dist == "rchisq")
-      # {
-      #   chiTail(U=input$chisq.value, df=input$df)
-      #   title(main="Chi^2 Distribution")
-      # }
-      else if (input$dist == "rf")
-      {
-        if(is.null(input$df1) | is.null(input$df2))
+        else if (input$dist == "rchisq")
         {
-          shiny:::flushReact()
-          return()
+          if(is.null(input$df))
+          {
+            shiny:::flushReact()
+            return()
+          }
+          M = NULL
+          if (input$tail == "middle")
+          {
+            M = c(L,U)
+            L = NULL
+            U = NULL
+          }
+          
+          chiTail(U=U, df=input$df)
+          title(main="Chi^2 Distribution")
         }
+        else if (input$dist == "rf")
+        {        
+          if(is.null(input$df1) | is.null(input$df2))
+          {
+            shiny:::flushReact()
+            return()
+          }
         
-        L = NULL
-        U = input$a
-        
-        FTail(U=U,df_n=input$df1, df_d=input$df2)
-        title(main="F Distribution")
-      }
+          M = NULL
+          if (input$tail == "middle")
+          {
+            M = c(L,U)
+            L = NULL
+            U = NULL
+          }
+                   
+          FTail(U=U,df_n=input$df1, df_d=input$df2)
+          title(main="F Distribution")
+        }
       else if (input$dist == "rbinom")
       {
         if(  is.null(input$n)
@@ -637,7 +647,14 @@ shinyServer(function(input, output)
       }
 
       U = input$b
+      
+      error = FALSE
+      if (L>U) error = TRUE
+      if (error){
+        return()
+      }
     }
+    
 
 
     f = function() NULL
@@ -654,13 +671,22 @@ shinyServer(function(input, output)
     }  
     else if (input$dist == "rt")
     {
-      if (is.null(input$df1))
+      if (is.null(input$df))
       {
         shiny:::flushReact()
         return()
       }
-
-      f = function(x) pt(x,input$df1)
+      
+      f = function(x) pt(x,input$df)
+    }
+    else if (input$dist == "rchisq"){
+      if (is.null(input$df))
+      {
+        shiny:::flushReact()
+        return()
+      }
+      
+      f = function(x) pchisq(x,input$df)
     }
     else if (input$dist == "rf"){
       if (is.null(input$df1) | is.null(input$df2))
@@ -670,7 +696,7 @@ shinyServer(function(input, output)
       }
       
       f = function(x) pf(x,input$df1,input$df2)
-    }
+    }    
     else if (input$dist == "rbinom")
     {
       if (is.null(input$n) | is.null(input$p) | is.null(input$lower_bound))

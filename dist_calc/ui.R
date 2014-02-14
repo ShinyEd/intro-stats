@@ -11,8 +11,8 @@ shinyUI(pageWithSidebar(
                 label = "Distribution:",
                 choices = c("Normal"      = "rnorm",
                             "t"           = "rt",
-                            #"Chi-Squared" = "rchisq",
-                            #"F"           = "rf",
+                            "Chi-Squared" = "rchisq",
+                            "F"           = "rf",
                             "Binomial"    = "rbinom"),
                 selected = "rnorm"),
 
