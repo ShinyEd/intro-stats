@@ -10,11 +10,12 @@ shinyUI(pageWithSidebar(
     selectInput(inputId = "dist",
                 label = "Distribution:",
                 choices = c("Normal"      = "rnorm",
+                            "Binomial"    = "rbinom",
                             "t"           = "rt",
-                            "Chi-Squared" = "rchisq",
                             "F"           = "rf",
-                            "Binomial"    = "rbinom"),
+                            "Chi-Squared" = "rchisq"),
                 selected = "rnorm"),
+    
 
     br(),
 
