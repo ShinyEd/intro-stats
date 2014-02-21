@@ -334,20 +334,20 @@ shinyServer(function(input, output)
       value = -1.96 
       min   = -6
       max   = 6
-      step  = 0.1
+      step  = 0.01
     }
     else if (input$dist == "rf")
     {
-      value = 1.5
+      value = round(qf(.95,input$df1,input$df2),digits=2)
       min   = 0
-      max   = 4
+      max   = round(qf(.995,input$df1,input$df2)*1.05,digits=2)
       step  = 0.1
     }
     else if (input$dist == "rchisq")
     {
-      value = 10
+      value = round(qchisq(.95,input$df),digits=2)
       min   = 0
-      max   = 30
+      max   = round(qchisq(.995,input$df),digits=2)
       step  = 0.1
     }
     else if (input$dist == "rbinom")
@@ -414,7 +414,7 @@ shinyServer(function(input, output)
         value = 1.96 
         min   = -6
         max   = 6
-        step  = 0.1
+        step  = 0.01
       }
       else if (input$dist == "rbinom")
       {
@@ -534,7 +534,7 @@ shinyServer(function(input, output)
             U = NULL
           }
           
-          chiTail(U=U, df=input$df)
+          chiTail(U=U, df=input$df, xlim = c(0,round(qchisq(.995,input$df),digits=2)+1)) 
           title(main="Chi^2 Distribution")
         }
         else if (input$dist == "rf")

@@ -1,7 +1,7 @@
 chiTail <-
 function(U=NULL, df = 10, curveColor=1, border=1, col="#569BBD", xlim=NULL, ylim=NULL, xlab='', ylab='', detail=999){
-	if(U <= 30){xlim <- c(0,30)}
-  if(U > 30){xlim <- c(0,U+0.01*U)}
+	#if(U <= 30){xlim <- c(0,30)}
+	#if(U > 30){xlim <- c(0,U+0.01*U)}
 	temp <- diff(range(xlim))
 	x    <- seq(xlim[1] - temp/4, xlim[2] + temp/4, length.out=detail)
 	y    <- dchisq(x, df)
