@@ -327,8 +327,8 @@ shinyServer(function(input, output)
       value = mu - 1.96 * sd
       min   = mu - 4 * sd
       max   = mu + 4 * sd
-      step = .01
-      #step  = find_normal_step(sd)
+      step  = find_normal_step(sd)
+      if (mu == 0 & sd == 1) {step = .01}
     }
     else if (input$dist == "rt")
     {
@@ -339,16 +339,16 @@ shinyServer(function(input, output)
     }
     else if (input$dist == "rf")
     {
-      value = round(qf(.95,input$df1,input$df2),digits=2)
+      value = round(qf(.95,as.numeric(input$df1),as.numeric(input$df2)),digits=2)
       min   = 0
-      max   = round(qf(.995,input$df1,input$df2)*1.05,digits=2)
+      max   = round(qf(.995,as.numeric(input$df1),as.numeric(input$df2))*1.05,digits=2)
       step  = 0.01
     }
     else if (input$dist == "rchisq")
     {
-      value = round(qchisq(.95,input$df),digits=2)
+      value = round(qchisq(.95,as.numeric(input$df)),digits=2)
       min   = 0
-      max   = round(qchisq(.995,input$df),digits=2)
+      max   = round(qchisq(.995,as.numeric(input$df)),digits=2)
       step  = 0.01
     }
     else if (input$dist == "rbinom")
@@ -535,7 +535,7 @@ shinyServer(function(input, output)
             U = NULL
           }
           
-          chiTail(U=U, df=input$df)
+          chiTail(U=U, df=input$df, xlim = c(0,round(qchisq(.995,input$df),digits=2)+1))
           title(main="Chi^2 Distribution")
         }
         else if (input$dist == "rf")
