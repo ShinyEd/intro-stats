@@ -258,7 +258,7 @@ shinyServer(function(input, output)
                   "Degrees of freedom (2)",
                   value = 10,
                   min = 1,
-                  max = 120)
+                  max = 50)
     }
   })
 
@@ -327,7 +327,8 @@ shinyServer(function(input, output)
       value = mu - 1.96 * sd
       min   = mu - 4 * sd
       max   = mu + 4 * sd
-      step  = find_normal_step(sd)
+      step = .01
+      #step  = find_normal_step(sd)
     }
     else if (input$dist == "rt")
     {
@@ -341,14 +342,14 @@ shinyServer(function(input, output)
       value = round(qf(.95,input$df1,input$df2),digits=2)
       min   = 0
       max   = round(qf(.995,input$df1,input$df2)*1.05,digits=2)
-      step  = 0.1
+      step  = 0.01
     }
     else if (input$dist == "rchisq")
     {
       value = round(qchisq(.95,input$df),digits=2)
       min   = 0
       max   = round(qchisq(.995,input$df),digits=2)
-      step  = 0.1
+      step  = 0.01
     }
     else if (input$dist == "rbinom")
     {
@@ -534,7 +535,7 @@ shinyServer(function(input, output)
             U = NULL
           }
           
-          chiTail(U=U, df=input$df, xlim = c(0,round(qchisq(.995,input$df),digits=2)+1)) 
+          chiTail(U=U, df=input$df)
           title(main="Chi^2 Distribution")
         }
         else if (input$dist == "rf")
