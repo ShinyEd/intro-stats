@@ -84,6 +84,7 @@ shinyServer(function(input, output) {
          ylab="y",
          main=paste0("Regression Model\n","(R = ", corr.coef,", ", "R-squared = ", r.squared,")"))
          
+
     newx <- seq(min(data1$x), max(data1$x), length.out=400)
     confs <- predict(lmResults(), newdata = data.frame(x=newx), 
                      interval = 'confidence')
@@ -105,6 +106,7 @@ shinyServer(function(input, output) {
     legend(legend_pos, inset=.05,
            legend=c("Regression Line", "Confidence Interval", "Prediction Interval"), 
            fill=c(COL[1],grey(.75),grey(.95)))
+    box()
   })
   
   output$residuals <- renderPlot({
