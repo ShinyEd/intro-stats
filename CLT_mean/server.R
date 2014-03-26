@@ -12,7 +12,6 @@ shinyServer(function(input, output) {
   
   output$mu = renderUI(
 {
-  #print("mean")
   if (input$dist == "rnorm")
   {
     sliderInput("mu",
@@ -25,7 +24,6 @@ shinyServer(function(input, output) {
   
   output$sd = renderUI(
 {
-  #print("sd")
   if (input$dist == "rnorm")
   {
     sliderInput("sd",
@@ -161,35 +159,37 @@ shinyServer(function(input, output) {
       phist=hist(pop, plot=FALSE)
       if (input$dist == "rnorm"){
         hist(pop, main=distname, xlab="", freq=FALSE, xlim = c(min(-100,pop),max(100,pop)), 
-             ylim=c(0, max(pdens$y, phist$density)), col=COL[1,2], border = "white", cex.main = 1.5)
+             ylim=c(0, max(pdens$y, phist$density)), col=COL[1,2], border = "white", 
+             cex.main = 1.5, cex.axis = 1.5, cex.lab = 1.5)
         legend_pos = ifelse(mu > 0, "topleft", "topright")
         legend(legend_pos, inset = 0.025, 
-               legend=bquote(atop(mu==.(m_pop),sigma==.(sd_pop))), 
+               legend=bquote(atop(mu==.(round(m_pop)),sigma==.(round(sd_pop)))), 
                bty = "n", cex = 1.5, text.col = COL[1], text.font = 2)
       }
       if (input$dist == "runif"){
         hist(pop, main=distname, xlab="", freq=FALSE, 
              ylim=c(0, max(pdens$y, phist$density)+.5), col=COL[1,2], border = "white", 
-             cex.main = 1.5)
+             cex.main = 1.5, cex.axis = 1.5, cex.lab = 1.5)
         legend_pos = ifelse(mu > 0, "topleft", "topright")
         legend(legend_pos, inset = 0.025, 
-               legend=bquote(atop(mu==.(m_pop),sigma==.(sd_pop))), 
+               legend=bquote(atop(mu==.(round(m_pop)),sigma==.(round(sd_pop)))), 
                bty = "n", cex = 1.5, text.col = COL[1], text.font = 2)
       }
       if (input$dist == "rlnorm") {
         hist(pop, main=distname, 
              xlab="", freq=FALSE, ylim=c(0, max(pdens$y, phist$density)),
-             col=COL[1,2], border = "white", cex.main = 1.5)
+             col=COL[1,2], border = "white", 
+             cex.main = 1.5, cex.axis = 1.5, cex.lab = 1.5)
         legend("topright", inset = 0.025, 
-               legend=bquote(atop(mu==.(m_pop),sigma==.(sd_pop))), 
+               legend=bquote(atop(mu==.(round(m_pop)),sigma==.(round(sd_pop)))), 
                bty = "n", cex = 1.5, text.col = COL[1], text.font = 2)
       }
       if (input$dist == "rbeta"){
         hist(pop, main=distname, xlab="", freq=FALSE, 
              ylim=c(0, max(pdens$y, phist$density)+.5), col=COL[1,2], border = "white", 
-             cex.main = 1.5)
+             cex.main = 1.5, cex.axis = 1.5, cex.lab = 1.5)
         legend("topleft", inset = 0.025, 
-               legend=bquote(atop(mu==.(m_pop),sigma==.(sd_pop))), 
+               legend=bquote(atop(mu==.(round(m_pop)),sigma==.(round(sd_pop)))), 
                bty = "n", cex = 1.5, text.col = COL[1], text.font = 2)
       }
       lines(pdens, col=COL[1], lwd=3)
@@ -221,9 +221,10 @@ shinyServer(function(input, output) {
       par(mfrow=c(2,4))
       for(i in 1:8){
         BHH2::dotPlot(x[,i], col = COL[2,3], 
-                      main = paste("Sample",i), cex.main = 1.5,
-                      xlab = "", pch=19, cex.axis = 1.5,
-                      ylim = c(0,2), xlim = c(min(-100,x),max(100,x)))
+                      main = paste("Sample",i), 
+                      xlab = "", pch=19,
+                      ylim = c(0,2), xlim = c(min(-100,x),max(100,x)),
+                      cex.main = 1.5, cex.axis = 1.5, cex.lab = 1.5)
         box()
         mean_samp = round(mean(x[,i]),2)
         sd_samp = round(sd(x[,i]),2)
@@ -298,11 +299,14 @@ shinyServer(function(input, output) {
       nhist=hist(ndist, plot=FALSE)
       
       if (input$dist == "rnorm"){
-        hist(ndist, main="Sampling distribution", 
+        hist(ndist, main = paste("Sampling distribution:\nDistribution of means of ", k, 
+                          " random samples, each\nconsisting of ", n, 
+                          " observations from a ", distname, sep=""),              
              xlab="Sample means", freq=FALSE,
              xlim=c(min(-100,pop),max(100,pop)),
              ylim=c(0, max(ndens$y, nhist$density)),
-             col=COL[2,2], border = "white", cex.main = 1.5)
+             col=COL[2,2], border = "white", 
+             cex.main = 1.5, cex.axis = 1.5, cex.lab = 1.5)
         legend_pos = ifelse(m_samp > 40, "topleft", "topright")
         legend(legend_pos, inset = 0.025, 
                legend=bquote(atop("mean of " ~ bar(x)==.(m_samp),"sd of " ~ bar(x) ~ "(SE)" ==.(sd_samp))), 
@@ -313,7 +317,8 @@ shinyServer(function(input, output) {
                                " random samples, each\nconsisting of ", n, 
                                " observations from a ", distname, sep=""), 
              xlab="Sample means", freq=FALSE, ylim=c(0, max(ndens$y, nhist$density)),
-             col=COL[2,3], border = "white", cex.main = 1.5)
+             col=COL[2,3], border = "white", 
+             cex.main = 1.5, cex.axis = 1.5, cex.lab = 1.5)
         legend_pos = ifelse(m_samp > 40, "topleft", "topright")
         legend(legend_pos, inset = 0.025, 
                legend=bquote(atop("mean of " ~ bar(x)==.(m_samp),"sd of " ~ bar(x) ~ "(SE)" ==.(sd_samp))), 
@@ -378,10 +383,10 @@ shinyServer(function(input, output) {
       n = input$n
       se=round(s_pop/sqrt(n),2)
       paste("According to the Central Limit Theorem (CLT), the distribution of sample means 
-          (the sampling distribution) should be nearly normally distributed. The mean of 
+          (the sampling distribution) should be nearly normal. The mean of 
           the sampling distribution should be approximately equal to the population mean (", m_pop, ") 
           and the standard error (the standard deviation of
-          sample means) should be approximately equal to the sd of the population divided by square root of
+          sample means) should be approximately equal to the SD of the population divided by square root of
           sample size (", s_pop,
             "/sqrt(",n, ") =", se,").")
     }

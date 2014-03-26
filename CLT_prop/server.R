@@ -33,8 +33,15 @@ shinyServer(function(input, output) {
   # plot 1   
   output$pop.dist = renderPlot({
     
-    pop = parent()
-    hist(pop, plot=FALSE)
+    popsize = 1000
+    counts = c(popsize*(1-input$p), popsize*input$p)/popsize
+    barplot(counts, 
+            main= paste0("Population distribution: \n p = ", input$p),
+            #main = "Population distribution:",
+            names.arg=c(0,1),
+            ylab="Relative Frequency" ,ylim=c(0,1),
+            col=COL[1,2],
+            cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex.names = 1.5)
     
   })
   
@@ -46,18 +53,27 @@ shinyServer(function(input, output) {
     
     par(mfrow=c(2,4))
     for(i in 1:8){
-      BHH2::dotPlot(x[,i], col = COL[2,3], 
-                    main = paste("Sample",i), cex.main = 1.5,
-                    xlab = "", pch=19, cex.axis = 1.5,
-                    ylim = c(0,2), xlim = c(min(0,x),max(1,x)))
+      counts <- table(x[,i])
+      barplot(counts, col = COL[7,2], 
+                    main = paste("Sample",i),
+                    xlab = "", pch=19,
+                    cex.main = 1.5, cex.lab = 1.5, cex.axis = 1.5, cex.names = 1.5,
+                    ylim = c(0,1.2*max(counts)))
+      
       box()
       mean_samp = round(mean(x[,i]),2)
       sd_samp = round(sd(x[,i]),2)
-      legend("topright", 
-             legend=bquote(atop(bar(x)[.(i)]==.(mean_samp),
-                                s[.(i)]==.(sd_samp))), 
-             bty = "n", cex = 1.5, text.font = 2)
-      abline(v=mean_samp, col=COL[2],lwd=2)
+      if(counts[1] > counts[2]){
+        legend("topright", 
+        legend=bquote(atop(hat(p)[.(i)]==.(mean_samp))), 
+        bty = "n", cex = 1.5, text.font = 3)        
+      }
+      if(counts[1] <= counts[2]){
+        legend("topleft", 
+               legend=bquote(atop(hat(p)[.(i)]==.(mean_samp))), 
+               bty = "n", cex = 1.5, text.font = 3)        
+      }
+
     }  
     
   })
@@ -88,30 +104,23 @@ shinyServer(function(input, output) {
     nhist=hist(ndist, plot=FALSE)
     
     
-    hist(ndist, main=paste("Distribution of means of ", k, 
+    hist(ndist, main=paste("Sampling distribution:\n",
+                          "Distribution of means of ", k, 
                            " random samples, each\nconsisting of ", n, 
-                           " observations from a Binomial", sep=""), 
+                           " observations from the population", sep=""), 
          xlab="Sample means", freq=FALSE, ylim=c(0, max(ndens$y, nhist$density)),
-         col=COL[2,3], border = "white", cex.main = 1.5)
+         col=COL[2,3], border = "white", 
+         cex.main = 1.5, cex.axis = 1.5, cex.lab = 1.5)
     legend_pos = ifelse(m_samp > 40, "topleft", "topright")
     legend(legend_pos, inset = 0.025, 
-           legend=bquote(atop("mean of " ~ bar(x)==.(m_samp),"sd of " ~ bar(x) ~ "(SE)" ==.(sd_samp))), 
+           legend=bquote(atop("mean of " ~ hat(p)==.(m_samp),"sd of " ~ hat(p) ~ "(SE)" ==.(sd_samp))), 
            bty = "n", cex = 1.5, text.col = COL[2], text.font = 2)
     
     lines(ndens, col=COL[2], lwd=3)
     box()
     
   })
-  
-  # text
-  output$sampling.descr = renderText({
-    
-    k = input$k
-    n = input$n
-    paste("Distribution of means of", k, "random samples,\n
-          each consisting of", n, " observations\n
-          from a Binomial distribution.")
-  })
+
   
   # text
   output$CLT.descr = renderText({
@@ -120,17 +129,17 @@ shinyServer(function(input, output) {
     
     pop = parent()
     m_pop =  p
-    sd_pop = round(sqrt((p*q)/n),2)
-    
+  
     n = input$n
-    se=round((p*(1-p))/n,2)
-    paste("According to the Central Limit Theorem (CLT), the distribution of sample means 
-        (the sampling distribution) should be nearly normally distributed. The mean of 
-        the sampling distribution should be approximately equal to p (", m_pop, ") 
+    se=round(sqrt(p*(1-p)/n),4)
+    
+    paste("According to the Central Limit Theorem (CLT), the distribution of sample proportions 
+        (the sampling distribution) should be nearly normal. The mean of 
+        the sampling distribution is approximately equal to p (", m_pop, ") 
         and the standard error (the standard deviation of
-        sample means) should be approximately equal to the sd of the population divided by square root of
-        sample size (", sd_pop,
-          "/sqrt(",n, ") =", se,").")
+        sample proportions) should be approximately equal to the square root of probability of
+        success (p) times the probability of failure (1-p) divided by the sample size (sqrt(", p, "*", q,
+          "/",n, ") =", se,").")
     
   })
   

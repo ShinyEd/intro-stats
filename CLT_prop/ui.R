@@ -2,19 +2,19 @@ library(shiny)
 
 shinyUI(pageWithSidebar(
   
-  headerPanel("Central Limit Theorem"),
+  headerPanel("Central Limit Theorem for Proportions"),
   
   sidebarPanel(
     
     sliderInput("n", 
                 "Sample size:", 
-                value = 30,
+                value = 20,
                 min = 2, 
                 max = 1000),
     br(),
     
     sliderInput("p", 
-                "Probability:", 
+                "Population Proportion:", 
                 value = .5,
                 step = .01,
                 min = 0, 
@@ -23,7 +23,7 @@ shinyUI(pageWithSidebar(
     
     sliderInput("k", 
                 "Number of samples:", 
-                value = 200,
+                value = 1000,
                 min = 10, 
                 max = 1000),
     br(),
