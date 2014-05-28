@@ -72,14 +72,17 @@ shinyServer(
       if(input$difficulty=="Easy"){
         difficulty <- 3
         numPoints <- 10
+        updateCheckboxGroupInput(session,inputId="options",choices=list("Averages","Standard deviation line","Ellipse"))
       }
-      else if(input$difficulty=="Normal"){
+      else if(input$difficulty=="Medium"){
         difficulty <- 2
         numPoints <- 25 
+        updateCheckboxGroupInput(session,inputId="options",choices=list("Averages","Standard deviation line"))
       }
       else{
         difficulty <- 1
         numPoints <- 100
+        updateCheckboxGroupInput(session,inputId="options",choices=list("Standard deviation line"))
       }
       
       input$newplot
@@ -163,40 +166,19 @@ generateData = function(difficulty,numPoints){
     }
     else{
       X = rnorm(numPoints,x_center,x_scale)
-      Y = rnorm(numPoints,-X,rgamma(1,1))
+      Y = rnorm(numPoints,-X,rgamma(1,1)*x_scale)
       return(data.frame(X,Y))      
     }
   }
   else if (difficulty == 2){
-    choice = sample(2,1)
-    if (choice ==2){
       X = rnorm(numPoints,x_center,x_scale)
-      Y = rnorm(numPoints,X,rgamma(1,1))
+      Y = rnorm(numPoints,rnorm(1)*X,rgamma(1,1)*x_scale)
       return(data.frame(X,Y))
-    }
-    else{
-      X = rnorm(numPoints,x_center,x_scale)
-      Y = rnorm(numPoints,-X,rgamma(1,1))
-      return(data.frame(X,Y))      
-    }
   }
   else{
-    choice = sample(3,1)
-    if (choice == 3){
       X = rnorm(numPoints,x_center,x_scale)
-      Y = rnorm(numPoints,X^2,rgamma(1,1))
+      Y = rnorm(numPoints,rnorm(1)*X,rgamma(1,1)*x_scale)
       return(data.frame(X,Y))
-    }
-    else if (choice ==2){
-      X = rnorm(numPoints,x_center,x_scale)
-      Y = rnorm(numPoints,X,rgamma(1,1))
-      return(data.frame(X,Y))
-    }
-    else{
-      X = rnorm(numPoints,x_center,x_scale)
-      Y = rnorm(numPoints,-X,rgamma(1,1))
-      return(data.frame(X,Y))      
-    }
   }
 }
 
