@@ -1,6 +1,6 @@
 ShinyEd
 =======
 
-Shiny Applets for Education
+Statistics education apps created in Shiny. Source code available on GitHub. 
 
-All applets can be accessed via http://stat.duke.edu/~mc301/shiny/applets.html
+All applets can be accessed via https://stat.duke.edu/~mc301/shinyed/.
