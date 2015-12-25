@@ -2,6 +2,6 @@
 layout: default
 date:   2015-01-20
 photo: CLT_mean.png
-caption_header: CLT for means&nbsp;&nbsp;&nbsp;<a href="http://spark.rstudio.com/minebocek/CLT_mean"><i class="fa fa-external-link"></i></a>
+caption_header: CLT for means&nbsp;&nbsp;&nbsp;<a href="https://gallery.shinyapps.io/CLT_mean"><i class="fa fa-external-link"></i></a>
 caption: Central limit theorem for distributions of sample means of varying sample sizes from normal, uniform, right skewed, and left skewed populations.
 ---

@@ -1,5 +1,5 @@
 REMOTEUSER ?= mc301
-REMOTEHOST ?= nighthawk.stat.duke.edu
+REMOTEHOST ?= bravo.stat.duke.edu
 REMOTEDIR ?= ~/.public_html/shinyed/
 REMOTE ?= $(REMOTEUSER)@$(REMOTEHOST):$(REMOTEDIR)
 
