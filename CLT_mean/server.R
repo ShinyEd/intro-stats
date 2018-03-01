@@ -18,7 +18,7 @@ shinyServer(function(input, output) {
     sliderInput("mu",
                 "Mean",
                 value = 0,
-                min = -50,
+                min = -40,
                 max = 50)
   }
 })
