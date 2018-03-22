@@ -598,12 +598,8 @@ server <- function(input, output){
           title(main="Chi^2 Distribution")
         }
         else if (input$dist == "rf")
-        {        
-          if(is.null(input$df1) | is.null(input$df2))
-          {
-            shiny:::flushReact()
-            return()
-          }
+        { 
+          req(U)
           
           M = NULL
           if (input$tail == "middle")
