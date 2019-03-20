@@ -21,15 +21,11 @@ shinyServer(function(input, output) {
   
   parent = reactive({
     n = 1e5
-    req(input$p)
-    req(input$n)
     return(rep_rand_draw(input$n, input$p))
   })
   
   samples = reactive({
     pop = parent()
-    req(input$n)
-    req(input$k)
     n = input$n
     k = input$k
     return(replicate(k, sample(pop, n, replace=TRUE)))
@@ -38,7 +34,6 @@ shinyServer(function(input, output) {
   # plot 1   
   
   output$pop.dist = renderPlot({
-    
     popsize = 1000
     counts = c(popsize*(1-input$p), popsize*input$p)/popsize
     barplot(counts, 
@@ -72,7 +67,7 @@ shinyServer(function(input, output) {
       sd_samp = round(sd(x[,i]),2)
       
       # added if statement to check if count 1 or count 2 are NA. this check 
-      #eliminated the error messages in the app
+      # eliminated the error messages in the app
       if(!is.na(counts[1]) & !is.na(counts[2])) {
         
       if(counts[1] > counts[2]) {
@@ -95,7 +90,6 @@ shinyServer(function(input, output) {
   
   # text
   output$num.samples = renderText({
-    req(input$k)
     k = input$k
     paste0("... continuing to Sample ",k,".")
     
@@ -103,9 +97,6 @@ shinyServer(function(input, output) {
   
   # plot 3
   output$sampling.dist = renderPlot({
-    req(input$n)
-    req(input$p)
-    req(input$k)
     n = input$n
     p = input$p
     k = input$k

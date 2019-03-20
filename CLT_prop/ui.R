@@ -5,7 +5,7 @@ shinyUI(pageWithSidebar(
   headerPanel("Central Limit Theorem for Proportions"),
   
   sidebarPanel(
-    wellPanel( # add a different panel for the parameters and for the user feedback??
+    wellPanel( # add a different panel for the parameters and for the user feedback
     
     sliderInput("n", 
                 "Sample size:", 
