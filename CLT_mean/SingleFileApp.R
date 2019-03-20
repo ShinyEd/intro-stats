@@ -9,38 +9,40 @@ ui <- pageWithSidebar(
   headerPanel("Central Limit Theorem for Means"),
   
   sidebarPanel(
-    radioButtons("dist", "Parent distribution (population):",
-                 list("Normal" = "rnorm",
-                      "Uniform" = "runif",
-                      "Right skewed" = "rlnorm",
-                      "Left skewed" = "rbeta")),
-    br(),
+    wellPanel( # write-up
+      radioButtons("dist", "Parent distribution (population):",
+                   list("Normal" = "rnorm",
+                        "Uniform" = "runif",
+                        "Right skewed" = "rlnorm",
+                        "Left skewed" = "rbeta")),
+      hr(), # write-up
+      
+      uiOutput("mu"),
+      uiOutput("sd"),
+      uiOutput("min"),
+      uiOutput("max"),
+      uiOutput("skew"),
+      
+      sliderInput("n",
+                  "Sample size:", 
+                  value = 30,
+                  min = 2,
+                  max = 500),
+      br(),
+      
+      sliderInput("k",
+                  "Number of samples:",
+                  value = 200,
+                  min = 10, 
+                  max = 1000)
+    ),
     
-    uiOutput("mu"),
-    uiOutput("sd"),
-    uiOutput("min"),
-    uiOutput("max"),
-    uiOutput("skew"),
-    
-    sliderInput("n", 
-                "Sample size:", 
-                value = 30,
-                min = 2, 
-                max = 500),
-    br(),
-    
-    sliderInput("k", 
-                "Number of samples:", 
-                value = 200,
-                min = 10, 
-                max = 1000),
-    br(),
-    
+    wellPanel(
     helpText(a(href="https://duke.qualtrics.com/SE/?SID=SV_3L8WjmwQo32cVk9", target="_blank", "Rate this app!")),
     helpText(a(href="https://github.com/ShinyEd/ShinyEd/tree/master/CLT_mean", target="_blank", "View code")),
     helpText(a(href="http://stat.duke.edu/~mc301/shiny/applets.html", target="_blank", "Check out other apps")),
     helpText(a(href="https://www.coursera.org/course/statistics", target="_blank", "Want to learn more for free?"))
-  ),
+  )),
   
   
   
@@ -61,11 +63,11 @@ ui <- pageWithSidebar(
 
 seed = as.numeric(Sys.time())
 
-server <- function(input, output) {
+server <- function(input, output, session) {
   
   output$mu = renderUI(
     {
-      req(input$dist)
+      # req(input$dist)
       if (input$dist == "rnorm")
       {
         sliderInput("mu",
@@ -78,7 +80,7 @@ server <- function(input, output) {
   
   output$sd = renderUI(
     {
-      req(input$dist)
+      # req(input$dist) - write-up
       if (input$dist == "rnorm")
       {
         sliderInput("sd",
@@ -91,7 +93,7 @@ server <- function(input, output) {
   
   output$min = renderUI(
     {
-      req(input$dist)
+      # req(input$dist) - write-up
       #print("min")
       if (input$dist == "runif")
       {
@@ -105,7 +107,7 @@ server <- function(input, output) {
   
   output$max = renderUI(
     {
-      req(input$dist)
+      # req(input$dist) - write-up
       #print("max")
       if (input$dist == "runif")
       {
@@ -113,23 +115,50 @@ server <- function(input, output) {
                     "Upper Bound",
                     value = 1,
                     min = 1,
-                    max = 20)
+                    max = 21) # write-up - changed from 20 to 21.
       }
     })
   
   output$skew = renderUI(
     {
-      req(input$dist)
+      # req(input$dist) - ask $ write-up
       #print("skew options")
       if (input$dist == "rlnorm" | input$dist == "rbeta"){
         selectInput(inputId = "skew",
-                    label = "Skew",
+                    label = "Skew:",
                     choices = c("Low skew" = "low",
                                 "Medium skew" = "med",
                                 "High skew" = "high"),
                     selected = "low")
       }
     })
+  
+  # new
+  maximum = reactive({
+    req(input$max)
+    return(input$max)
+  })
+  
+  # new
+  observeEvent(input$min,{
+    if (maximum() < input$min){
+      updateSliderInput(session, "max", value = input$min + 1)
+    }
+  })
+  
+  # new
+  minimum = reactive({
+    req(input$min)
+    return(input$min)
+  })
+  
+  # new
+  observeEvent(input$max,{
+    if (minimum() > input$max){ # do >= ?
+      updateSliderInput(session, "min", value = input$max - 1)
+    }
+  })
+  
   
   rand_draw = function(dist, n, mu, sd, min, max, skew) 
   {
@@ -146,7 +175,8 @@ server <- function(input, output) {
       }
     }     
     else if (dist == "rnorm"){
-      mean = input$mu ; sd = input$sd 
+      # mean = input$mu ; sd = input$sd - ask $ write-up
+      mean = mu ; sd = sd # new
       vals = do.call(dist, list(n=n, mean=mu, sd=sd))
     }    
     else if (dist == "rlnorm"){
@@ -166,34 +196,55 @@ server <- function(input, output) {
     return(vals)
   }
   
-  rep_rand_draw = repeatable(rand_draw)  
+  rep_rand_draw = repeatable(rand_draw)
   
   parent = reactive({
-    req(input$dist, input$mu, input$sd)
+    
+    ### using validate:
+    
+    # validate(
+    #   need(length(input$mu) != 0 | is.na(input$mu) == F, message = F),
+    #   need(length(input$sd) != 0 | is.na(input$sd) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F),
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$skew) != 0 | is.na(input$skew) == F, message = F)
+    # )
+    
     n = 1e5
+    req(input$mu, input$sd, input$min, input$max, input$skew)
     return(rep_rand_draw(input$dist, n, input$mu, input$sd, input$min, input$max, input$skew))
   })
   
   samples = reactive({
-    req(parent())
+    # req(parent()) - ask $ write-up
     pop = parent()
+    
     n = input$n
     k = input$k
     return(replicate(k, sample(pop, n, replace=TRUE)))
   })
   
-  # plot 1   
+  # plot 1
   output$pop.dist = renderPlot({
     
     distname = switch(input$dist,
                       rnorm = "Population distribution: Normal",
                       rlnorm = "Population distribution: Right skewed",
                       rbeta = "Population distribution: Left skewed",
-                      runif = "Population distribution: Uniform")   
+                      runif = "Population distribution: Uniform")
     
     pop = parent()
     m_pop =  round(mean(pop),2)
     sd_pop = round(sd(pop),2)
+    
+    # validate(
+    #   need(length(input$mu) != 0 | is.na(input$mu) == F, message = F),
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F)
+    # )
+    
+    req(input$mu) # new
+    
     mu = input$mu
     
     L = NULL
@@ -202,22 +253,32 @@ server <- function(input, output) {
     error = FALSE
     
     if (input$dist == "runif"){
+      
+      req(input$min) # new
+      req(input$max) # new
+      
       L = input$min
       U = input$max
+      
       if (L > U){
         error = TRUE
       }
     }
     
-    if (error)
-    {
+    if (error){
       plot(0,0,type='n',axes=FALSE,xlab="",ylab="",mar=c(1,1,1,1))
-      text(0,0,"Error: Lower bound greater than upper bound.",col="red",cex=2)
-    }
-    else{
+      # even though we are checking with observe, for a few second when the
+      # values are changed and L>U, L stays > U before the handlers in
+      # observe updates the values. The text below can be displayed while this
+      # happens.
       
+      # text(0,0,"Error: Lower bound greater than upper bound.",col="red",cex=2)
+      text(0, 0, "plots reloading ...", col = "black", cex = 2)
+      
+    }else{
       pdens=density(pop)
       phist=hist(pop, plot=FALSE)
+      
       if (input$dist == "rnorm"){
         hist(pop, main=distname, xlab="", freq=FALSE, xlim = c(min(-100,pop),max(100,pop)),
              ylim=c(0, max(pdens$y, phist$density)), col=COL[1,2], border = "white",
@@ -263,7 +324,16 @@ server <- function(input, output) {
     
     L = NULL ; U = NULL ; error = FALSE
     
+    # validate(
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F)
+    # )
+    
     if (input$dist == "runif"){
+      
+      req(input$min) # new
+      req(input$max) # new
+      
       L = input$min
       U = input$max
       if (L > U){
@@ -302,7 +372,16 @@ server <- function(input, output) {
   output$num.samples = renderText({
     L = NULL ; U = NULL ; error = FALSE
     
+    # validate(
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F)
+    # )
+    
     if (input$dist == "runif"){
+      
+      req(input$min) # new
+      req(input$max) # new
+      
       L = input$min ; U = input$max
       if (L > U){
         error = TRUE
@@ -324,7 +403,16 @@ server <- function(input, output) {
     
     L = NULL ; U = NULL ; error = FALSE
     
+    # validate(
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F)
+    # )
+    
     if (input$dist == "runif"){
+      
+      req(input$min) # new
+      req(input$max) # new
+      
       L = input$min ; U = input$max
       if (L > U){
         error = TRUE
@@ -341,7 +429,6 @@ server <- function(input, output) {
                         rlnorm  = "right skewed population",
                         rbeta = "left skewed population",
                         runif = "uniform population")   
-      
       
       n = input$n
       k = input$k
@@ -360,9 +447,9 @@ server <- function(input, output) {
       nhist=hist(ndist, plot=FALSE)
       
       if (input$dist == "rnorm"){
-        hist(ndist, main = paste("Sampling distribution:\nDistribution of means of ", k, 
+        hist(ndist, main = paste("Sampling distribution: Distribution of means of ", k, 
                                  " random samples, each\nconsisting of ", n, 
-                                 " observations from a ", distname, sep=""),              
+                                 " observations from a ", distname, sep="", "\n"), # write-up           
              xlab="Sample means", freq=FALSE,
              xlim=c(min(-100,pop),max(100,pop)),
              ylim=c(0, max(ndens$y, nhist$density)),
@@ -401,7 +488,17 @@ server <- function(input, output) {
     
     L = NULL ; U = NULL ; error = FALSE
     
+    # validate(
+    #   need(length(input$mu) != 0 | is.na(input$mu) == F, message = F),
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F)
+    # )
+    
     if (input$dist == "runif"){
+      
+      req(input$min) # new
+      req(input$max) # new
+      
       L = input$min ; U = input$max
       if (L > U){
         error = TRUE
@@ -413,7 +510,7 @@ server <- function(input, output) {
     
     else{
       
-      k = input$k
+      k = input$k 
       n = input$n
       paste("Distribution of means of", k, "random samples,\n
             each consisting of", n, " observations\n
@@ -424,9 +521,19 @@ server <- function(input, output) {
   # text
   output$CLT.descr = renderText({
     
+    # validate(
+    #   need(length(input$mu) != 0 | is.na(input$mu) == F, message = F),
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F)
+    # )
+    
     L = NULL ; U = NULL ; error = FALSE
     
     if (input$dist == "runif"){
+      
+      req(input$min) # new
+      req(input$max) # new
+      
       L = input$min ; U = input$max
       if (L > U){
         error = TRUE
@@ -437,6 +544,7 @@ server <- function(input, output) {
       paste0()
     
     else{
+      
       pop = parent()
       m_pop =  round(mean(pop),2)
       s_pop = round(sd(pop),2)

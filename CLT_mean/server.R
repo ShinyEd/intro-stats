@@ -7,76 +7,102 @@ library(BHH2)
 
 seed = as.numeric(Sys.time())
 
-shinyServer(function(input, output) {
-  
+server <- function(input, output, session) {
   
   output$mu = renderUI(
-{
-  req(input$dist)
-  if (input$dist == "rnorm")
-  {
-    sliderInput("mu",
-                "Mean",
-                value = 0,
-                min = -40,
-                max = 50)
-  }
-})
+    {
+      # req(input$dist)
+      if (input$dist == "rnorm")
+      {
+        sliderInput("mu",
+                    "Mean",
+                    value = 0,
+                    min = -40,
+                    max = 50)
+      }
+    })
   
   output$sd = renderUI(
-{
-  req(input$dist)
-  if (input$dist == "rnorm")
-  {
-    sliderInput("sd",
-                "Standard deviation",
-                value = 20,
-                min = 1,
-                max = 30)
-  }
-})
+    {
+      # req(input$dist) - write-up
+      if (input$dist == "rnorm")
+      {
+        sliderInput("sd",
+                    "Standard deviation",
+                    value = 20,
+                    min = 1,
+                    max = 30)
+      }
+    })
   
   output$min = renderUI(
-{
-  req(input$dist)
-  #print("min")
-  if (input$dist == "runif")
-  {
-    sliderInput("min",
-                "Lower Bound",
-                value = 0,
-                min = 0,
-                max = 20)
-  }
-})
+    {
+      # req(input$dist) - write-up
+      #print("min")
+      if (input$dist == "runif")
+      {
+        sliderInput("min",
+                    "Lower Bound",
+                    value = 0,
+                    min = 0,
+                    max = 20)
+      }
+    })
   
   output$max = renderUI(
-{
-  req(input$dist)
-  #print("max")
-  if (input$dist == "runif")
-  {
-    sliderInput("max",
-                "Upper Bound",
-                value = 1,
-                min = 1,
-                max = 20)
-  }
-})
+    {
+      # req(input$dist) - write-up
+      #print("max")
+      if (input$dist == "runif")
+      {
+        sliderInput("max",
+                    "Upper Bound",
+                    value = 1,
+                    min = 1,
+                    max = 21) # write-up - changed from 20 to 21.
+      }
+    })
   
   output$skew = renderUI(
-{
-  req(input$dist)
-  #print("skew options")
-  if (input$dist == "rlnorm" | input$dist == "rbeta"){
-    selectInput(inputId = "skew",
-                label = "Skew",
-                choices = c("Low skew" = "low",
-                            "Medium skew" = "med",
-                            "High skew" = "high"),
-                selected = "low")
-  }
-})
+    {
+      # req(input$dist) - ask $ write-up
+      #print("skew options")
+      if (input$dist == "rlnorm" | input$dist == "rbeta"){
+        selectInput(inputId = "skew",
+                    label = "Skew:",
+                    choices = c("Low skew" = "low",
+                                "Medium skew" = "med",
+                                "High skew" = "high"),
+                    selected = "low")
+      }
+    })
+  
+  # new
+  maximum = reactive({
+    req(input$max)
+    return(input$max)
+  })
+  
+  # new
+  observeEvent(input$min,{
+    if (maximum() < input$min){
+      updateSliderInput(session, "max", value = input$min + 1)
+    }
+  })
+  
+  # new
+  minimum = reactive({
+    req(input$min)
+    return(input$min)
+  })
+  
+  # new
+  observeEvent(input$max,{
+    if (minimum() > input$max){ # do >= ?
+      updateSliderInput(session, "min", value = input$max - 1)
+    }
+  })
+  
   
   rand_draw = function(dist, n, mu, sd, min, max, skew) 
   {
@@ -93,7 +119,8 @@ shinyServer(function(input, output) {
       }
     }     
     else if (dist == "rnorm"){
-      mean = input$mu ; sd = input$sd 
+      # mean = input$mu ; sd = input$sd - ask $ write-up
+      mean = mu ; sd = sd # new
       vals = do.call(dist, list(n=n, mean=mu, sd=sd))
     }    
     else if (dist == "rlnorm"){
@@ -113,58 +140,89 @@ shinyServer(function(input, output) {
     return(vals)
   }
   
-  rep_rand_draw = repeatable(rand_draw)  
-    
+  rep_rand_draw = repeatable(rand_draw)
+  
   parent = reactive({
-    req(input$dist, input$mu, input$sd)
+    
+    ### using validate:
+    
+    # validate(
+    #   need(length(input$mu) != 0 | is.na(input$mu) == F, message = F),
+    #   need(length(input$sd) != 0 | is.na(input$sd) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F),
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$skew) != 0 | is.na(input$skew) == F, message = F)
+    # )
+    
     n = 1e5
+    req(input$mu, input$sd, input$min, input$max, input$skew)
     return(rep_rand_draw(input$dist, n, input$mu, input$sd, input$min, input$max, input$skew))
   })
   
   samples = reactive({
-    req(parent())
+    # req(parent()) - ask $ write-up
     pop = parent()
+    
     n = input$n
     k = input$k
     return(replicate(k, sample(pop, n, replace=TRUE)))
   })
   
-  # plot 1   
+  # plot 1
   output$pop.dist = renderPlot({
     
     distname = switch(input$dist,
                       rnorm = "Population distribution: Normal",
                       rlnorm = "Population distribution: Right skewed",
                       rbeta = "Population distribution: Left skewed",
-                      runif = "Population distribution: Uniform")   
+                      runif = "Population distribution: Uniform")
     
     pop = parent()
     m_pop =  round(mean(pop),2)
     sd_pop = round(sd(pop),2)
+    
+    # validate(
+    #   need(length(input$mu) != 0 | is.na(input$mu) == F, message = F),
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F)
+    # )
+    
+    req(input$mu) # new
+    
     mu = input$mu
     
     L = NULL
     U = NULL
     
     error = FALSE
-
+    
     if (input$dist == "runif"){
+      
+      req(input$min) # new
+      req(input$max) # new
+      
       L = input$min
       U = input$max
+      
       if (L > U){
         error = TRUE
       }
     }
-
-    if (error)
-    {
+    
+    if (error){
       plot(0,0,type='n',axes=FALSE,xlab="",ylab="",mar=c(1,1,1,1))
-      text(0,0,"Error: Lower bound greater than upper bound.",col="red",cex=2)
-    }
-    else{
-
+      # even though we are checking with observe, for a few second when the
+      # values are changed and L>U, L stays > U before the handlers in
+      # observe updates the values. The text below can be displayed while this
+      # happens.
+      
+      # text(0,0,"Error: Lower bound greater than upper bound.",col="red",cex=2)
+      text(0, 0, "plots reloading ...", col = "black", cex = 2)
+      
+    }else{
       pdens=density(pop)
       phist=hist(pop, plot=FALSE)
+      
       if (input$dist == "rnorm"){
         hist(pop, main=distname, xlab="", freq=FALSE, xlim = c(min(-100,pop),max(100,pop)),
              ylim=c(0, max(pdens$y, phist$density)), col=COL[1,2], border = "white",
@@ -204,28 +262,37 @@ shinyServer(function(input, output) {
       box()
     }
   })
-
+  
   # plot 2
   output$sample.dist = renderPlot({
-
+    
     L = NULL ; U = NULL ; error = FALSE
-
+    
+    # validate(
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F)
+    # )
+    
     if (input$dist == "runif"){
+      
+      req(input$min) # new
+      req(input$max) # new
+      
       L = input$min
       U = input$max
       if (L > U){
         error = TRUE
       }
     }
-
+    
     if (error)
       return
-
+    
     else{
-
+      
       par(mfrow=c(3,3))
       x = samples()
-
+      
       par(mfrow=c(2,4))
       for(i in 1:8){
         BHH2::dotPlot(x[,i], col = COL[2,3],
@@ -244,23 +311,32 @@ shinyServer(function(input, output) {
       }
     }
   })
-
+  
   # text
   output$num.samples = renderText({
     L = NULL ; U = NULL ; error = FALSE
-
+    
+    # validate(
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F)
+    # )
+    
     if (input$dist == "runif"){
+      
+      req(input$min) # new
+      req(input$max) # new
+      
       L = input$min ; U = input$max
       if (L > U){
         error = TRUE
       }
     }
-
+    
     if (error)
       paste0()
-
+    
     else{
-
+      
       k = input$k
       paste0("... continuing to Sample ",k,".")
     }
@@ -271,7 +347,16 @@ shinyServer(function(input, output) {
     
     L = NULL ; U = NULL ; error = FALSE
     
+    # validate(
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F)
+    # )
+    
     if (input$dist == "runif"){
+      
+      req(input$min) # new
+      req(input$max) # new
+      
       L = input$min ; U = input$max
       if (L > U){
         error = TRUE
@@ -288,7 +373,6 @@ shinyServer(function(input, output) {
                         rlnorm  = "right skewed population",
                         rbeta = "left skewed population",
                         runif = "uniform population")   
-      
       
       n = input$n
       k = input$k
@@ -307,9 +391,9 @@ shinyServer(function(input, output) {
       nhist=hist(ndist, plot=FALSE)
       
       if (input$dist == "rnorm"){
-        hist(ndist, main = paste("Sampling distribution:\nDistribution of means of ", k, 
-                          " random samples, each\nconsisting of ", n, 
-                          " observations from a ", distname, sep=""),              
+        hist(ndist, main = paste("Sampling distribution: Distribution of means of ", k, 
+                                 " random samples, each\nconsisting of ", n, 
+                                 " observations from a ", distname, sep="", "\n"), # write-up           
              xlab="Sample means", freq=FALSE,
              xlim=c(min(-100,pop),max(100,pop)),
              ylim=c(0, max(ndens$y, nhist$density)),
@@ -348,7 +432,17 @@ shinyServer(function(input, output) {
     
     L = NULL ; U = NULL ; error = FALSE
     
+    # validate(
+    #   need(length(input$mu) != 0 | is.na(input$mu) == F, message = F),
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F)
+    # )
+    
     if (input$dist == "runif"){
+      
+      req(input$min) # new
+      req(input$max) # new
+      
       L = input$min ; U = input$max
       if (L > U){
         error = TRUE
@@ -360,20 +454,30 @@ shinyServer(function(input, output) {
     
     else{
       
-      k = input$k
+      k = input$k 
       n = input$n
       paste("Distribution of means of", k, "random samples,\n
-             each consisting of", n, " observations\n
-             from a", distname)
+            each consisting of", n, " observations\n
+            from a", distname)
     }
-  })
+    })
   
   # text
   output$CLT.descr = renderText({
     
+    # validate(
+    #   need(length(input$mu) != 0 | is.na(input$mu) == F, message = F),
+    #   need(length(input$max) != 0 | is.na(input$max) == F, message = F),
+    #   need(length(input$min) != 0 | is.na(input$min) == F, message = F)
+    # )
+    
     L = NULL ; U = NULL ; error = FALSE
     
     if (input$dist == "runif"){
+      
+      req(input$min) # new
+      req(input$max) # new
+      
       L = input$min ; U = input$max
       if (L > U){
         error = TRUE
@@ -384,6 +488,7 @@ shinyServer(function(input, output) {
       paste0()
     
     else{
+      
       pop = parent()
       m_pop =  round(mean(pop),2)
       s_pop = round(sd(pop),2)
@@ -391,14 +496,12 @@ shinyServer(function(input, output) {
       n = input$n
       se=round(s_pop/sqrt(n),2)
       paste("According to the Central Limit Theorem (CLT), the distribution of sample means 
-          (the sampling distribution) should be nearly normal. The mean of 
-          the sampling distribution should be approximately equal to the population mean (", m_pop, ") 
-          and the standard error (the standard deviation of
-          sample means) should be approximately equal to the SD of the population divided by square root of
-          sample size (", s_pop,
+            (the sampling distribution) should be nearly normal. The mean of 
+            the sampling distribution should be approximately equal to the population mean (", m_pop, ") 
+            and the standard error (the standard deviation of
+            sample means) should be approximately equal to the SD of the population divided by square root of
+            sample size (", s_pop,
             "/sqrt(",n, ") =", se,").")
     }
   })
-  
-  
-})
+  }
