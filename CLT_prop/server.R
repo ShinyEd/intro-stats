@@ -5,6 +5,7 @@ library(openintro)
 library(gridExtra)
 library(BHH2)
 
+
 seed = as.numeric(Sys.time())
 
 shinyServer(function(input, output) {
@@ -31,12 +32,12 @@ shinyServer(function(input, output) {
   })
   
   # plot 1   
+  
   output$pop.dist = renderPlot({
-    
     popsize = 1000
     counts = c(popsize*(1-input$p), popsize*input$p)/popsize
     barplot(counts, 
-            main= paste0("Population distribution: \n p = ", input$p),
+            main = paste0("Population distribution: \n p = ", input$p),
             #main = "Population distribution:",
             names.arg=c(0,1),
             ylab="Relative Frequency" ,ylim=c(0,1),
@@ -46,6 +47,7 @@ shinyServer(function(input, output) {
   })
   
   # plot 2
+  
   output$sample.dist = renderPlot({ 
     
     par(mfrow=c(3,3))
@@ -63,24 +65,31 @@ shinyServer(function(input, output) {
       box()
       mean_samp = round(mean(x[,i]),2)
       sd_samp = round(sd(x[,i]),2)
-      if(counts[1] > counts[2]){
+      
+      # added if statement to check if count 1 or count 2 are NA. this check 
+      # eliminated the error messages in the app
+      if(!is.na(counts[1]) & !is.na(counts[2])) {
+        
+      if(counts[1] > counts[2]) {
         legend("topright", 
-        legend=bquote(atop(hat(p)[.(i)]==.(mean_samp))), 
-        bty = "n", cex = 1.5, text.font = 3)        
-      }
-      if(counts[1] <= counts[2]){
-        legend("topleft", 
                legend=bquote(atop(hat(p)[.(i)]==.(mean_samp))), 
                bty = "n", cex = 1.5, text.font = 3)        
       }
-
-    }  
-    
+      else {
+        legend("topleft", 
+               legend=bquote(atop(hat(p)[.(i)]==.(mean_samp))), 
+               bty = "n", cex = 1.5, text.font = 3)        
+        }}
+    else { 
+      legend("top", 
+                 legend=bquote(atop(hat(p)[.(i)]==.(mean_samp))), 
+                 bty = "n", cex = 1.5, text.font = 3) 
+      }  
+    }
   })
   
   # text
   output$num.samples = renderText({
-    
     k = input$k
     paste0("... continuing to Sample ",k,".")
     
@@ -88,7 +97,6 @@ shinyServer(function(input, output) {
   
   # plot 3
   output$sampling.dist = renderPlot({
-    
     n = input$n
     p = input$p
     k = input$k
@@ -103,11 +111,12 @@ shinyServer(function(input, output) {
     ndens=density(ndist)
     nhist=hist(ndist, plot=FALSE)
     
+    # minor change in the way the title is displayed
     
-    hist(ndist, main=paste("Sampling distribution:\n",
+    hist(ndist, main=paste("Sampling distribution: ",
                           "Distribution of means of ", k, 
                            " random samples, each\nconsisting of ", n, 
-                           " observations from the population", sep=""), 
+                           " observations from the population", sep="", "\n"), 
          xlab="Sample means", freq=FALSE, ylim=c(0, max(ndens$y, nhist$density)),
          col=COL[2,3], border = "white", 
          cex.main = 1.5, cex.axis = 1.5, cex.lab = 1.5)
