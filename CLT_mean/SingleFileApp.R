@@ -1,70 +1,84 @@
-# Load packages -----------------------------------------------------
+# Load packages ----------------------------------------------------------------
+
 library(shiny)
 library(openintro)
 library(gridExtra)
 library(BHH2)
 
-# Define UI ---------------------------------------------------------
-ui <- pageWithSidebar(
-  headerPanel("Central Limit Theorem for Means"),
-  
-  sidebarPanel(
-    wellPanel( # write-up
-      radioButtons("dist", "Parent distribution (population):",
-                   list("Normal" = "rnorm",
-                        "Uniform" = "runif",
-                        "Right skewed" = "rlnorm",
-                        "Left skewed" = "rbeta")),
-      hr(), # write-up
-      
-      uiOutput("mu"),
-      uiOutput("sd"),
-      uiOutput("min"),
-      uiOutput("max"),
-      uiOutput("skew"),
-      
-      sliderInput("n",
-                  "Sample size:", 
-                  value = 30,
-                  min = 2,
-                  max = 500),
-      br(),
-      
-      sliderInput("k",
-                  "Number of samples:",
-                  value = 200,
-                  min = 10, 
-                  max = 1000)
+# Define UI --------------------------------------------------------------------
+
+ui <- fluidPage(
+  # Title ----
+  titlePanel("Central Limit Theorem for Means"),
+  sidebarLayout(
+    sidebarPanel(
+      wellPanel(
+        # Select distribution ----
+        radioButtons("dist", "Parent distribution (population):",
+                     list("Normal" = "rnorm",
+                          "Uniform" = "runif",
+                          "Right skewed" = "rlnorm",
+                          "Left skewed" = "rbeta")),
+        hr(),
+        
+        # Distribution parameters / features ----
+        uiOutput("mu"),
+        uiOutput("sd"),
+        uiOutput("minmax"),
+        #uiOutput("max"),
+        uiOutput("skew"),
+        
+        # Select sample size ----
+        sliderInput("n",
+                    "Sample size:", 
+                    value = 30,
+                    min = 2,
+                    max = 500),
+        br(),
+        
+        # Number of samples ----
+        sliderInput("k",
+                    "Number of samples:",
+                    value = 200,
+                    min = 10, 
+                    max = 1000)
+      ),
+      # Informational text ---- 
+      wellPanel(
+        helpText(a(href="https://duke.qualtrics.com/SE/?SID=SV_3L8WjmwQo32cVk9", target="_blank", "Rate this app!")),
+        helpText(a(href="https://github.com/ShinyEd/ShinyEd/tree/master/CLT_mean", target="_blank", "View code")),
+        helpText(a(href="http://stat.duke.edu/~mc301/shiny/applets.html", target="_blank", "Check out other apps")),
+        helpText(a(href="https://www.coursera.org/course/statistics", target="_blank", "Want to learn more for free?"))
+      )
     ),
+    mainPanel(
+      # Population plot ----
+      plotOutput("pop.dist"),
+      br(),
+      # Sample plots ----
+      plotOutput("sample.dist"),
+      #  Number of samples ----
+      div(h3(textOutput("num.samples")), align = "center"),
+      br(),
+      # Sampling plot ----
+      plotOutput("sampling.dist"),
+      # Sampling description ----
+      div(textOutput("sampling.descr"), align = "center"),
+      br(),
+      # CLT description ----
+      div(h5(textOutput("CLT.descr"), align = "center"))
+    )
     
-    wellPanel(
-    helpText(a(href="https://duke.qualtrics.com/SE/?SID=SV_3L8WjmwQo32cVk9", target="_blank", "Rate this app!")),
-    helpText(a(href="https://github.com/ShinyEd/ShinyEd/tree/master/CLT_mean", target="_blank", "View code")),
-    helpText(a(href="http://stat.duke.edu/~mc301/shiny/applets.html", target="_blank", "Check out other apps")),
-    helpText(a(href="https://www.coursera.org/course/statistics", target="_blank", "Want to learn more for free?"))
-  )),
-  
-  
-  
-  mainPanel(
-    plotOutput("pop.dist"),
-    br(),
-    plotOutput("sample.dist"),
-    div(h3(textOutput("num.samples")), align = "center"),
-    br(),
-    plotOutput("sampling.dist"),
-    div(textOutput("sampling.descr"), align = "center"),
-    br(),
-    div(h5(textOutput("CLT.descr"), align = "center"))
   )
 )
 
 # Define server function --------------------------------------------
 
-seed = as.numeric(Sys.time())
+seed <- as.numeric(Sys.time())
 
 server <- function(input, output, session) {
   
+  # Mean slider for Normal distribution ----
   output$mu = renderUI(
     {
       # req(input$dist)
@@ -78,6 +92,7 @@ server <- function(input, output, session) {
       }
     })
   
+  # SD slider for Normal distribution ----
   output$sd = renderUI(
     {
       # req(input$dist) - write-up
@@ -91,31 +106,18 @@ server <- function(input, output, session) {
       }
     })
   
-  output$min = renderUI(
+  # Minmax slider for Uniform distribution ----
+  output$minmax = renderUI(
     {
       # req(input$dist) - write-up
       #print("min")
       if (input$dist == "runif")
       {
         sliderInput("min",
-                    "Lower Bound",
-                    value = 0,
+                    "Lower and Upper Bounds",
+                    value = c(5, 15),
                     min = 0,
                     max = 20)
-      }
-    })
-  
-  output$max = renderUI(
-    {
-      # req(input$dist) - write-up
-      #print("max")
-      if (input$dist == "runif")
-      {
-        sliderInput("max",
-                    "Upper Bound",
-                    value = 1,
-                    min = 1,
-                    max = 21) # write-up - changed from 20 to 21.
       }
     })
   
@@ -132,35 +134,9 @@ server <- function(input, output, session) {
                     selected = "low")
       }
     })
+
   
-  # new
-  maximum = reactive({
-    req(input$max)
-    return(input$max)
-  })
-  
-  # new
-  observeEvent(input$min,{
-    if (maximum() < input$min){
-      updateSliderInput(session, "max", value = input$min + 1)
-    }
-  })
-  
-  # new
-  minimum = reactive({
-    req(input$min)
-    return(input$min)
-  })
-  
-  # new
-  observeEvent(input$max,{
-    if (minimum() > input$max){ # do >= ?
-      updateSliderInput(session, "min", value = input$max - 1)
-    }
-  })
-  
-  
-  rand_draw = function(dist, n, mu, sd, min, max, skew) 
+  rand_draw <- function(dist, n, mu, sd, min, max, skew) 
   {
     vals = NULL
     if (dist == "rbeta") {
@@ -175,8 +151,6 @@ server <- function(input, output, session) {
       }
     }     
     else if (dist == "rnorm"){
-      # mean = input$mu ; sd = input$sd - ask $ write-up
-      mean = mu ; sd = sd # new
       vals = do.call(dist, list(n=n, mean=mu, sd=sd))
     }    
     else if (dist == "rlnorm"){
@@ -191,7 +165,7 @@ server <- function(input, output, session) {
       }
     }
     else if (dist == "runif"){
-      vals = do.call(dist, list(n=n, min=min, max=max))
+      vals = do.call(dist, list(n=n, min=minmax[1], max=minmax[2]))
     }    
     return(vals)
   }
@@ -211,8 +185,8 @@ server <- function(input, output, session) {
     # )
     
     n = 1e5
-    req(input$mu, input$sd, input$min, input$max, input$skew)
-    return(rep_rand_draw(input$dist, n, input$mu, input$sd, input$min, input$max, input$skew))
+    req(input$mu, input$sd, input$minmax, input$skew)
+    return(rep_rand_draw(input$dist, n, input$mu, input$sd, input$minmax[1], input$minmax[2], input$skew))
   })
   
   samples = reactive({
@@ -254,11 +228,10 @@ server <- function(input, output, session) {
     
     if (input$dist == "runif"){
       
-      req(input$min) # new
-      req(input$max) # new
-      
-      L = input$min
-      U = input$max
+      req(input$minmax)
+
+      L = input$minmax[1]
+      U = input$minmax[2]
       
       if (L > U){
         error = TRUE
@@ -273,7 +246,7 @@ server <- function(input, output, session) {
       # happens.
       
       # text(0,0,"Error: Lower bound greater than upper bound.",col="red",cex=2)
-      text(0, 0, "plots reloading ...", col = "black", cex = 2)
+      #text(0, 0, "plots reloading ...", col = "black", cex = 2)
       
     }else{
       pdens=density(pop)
@@ -331,11 +304,10 @@ server <- function(input, output, session) {
     
     if (input$dist == "runif"){
       
-      req(input$min) # new
-      req(input$max) # new
+      req(input$minmax)
       
-      L = input$min
-      U = input$max
+      L = input$minmax[1]
+      U = input$minmax[2]
       if (L > U){
         error = TRUE
       }
@@ -379,10 +351,10 @@ server <- function(input, output, session) {
     
     if (input$dist == "runif"){
       
-      req(input$min) # new
-      req(input$max) # new
+      req(input$minmax)
       
-      L = input$min ; U = input$max
+      L = input$minmax[1]
+      U = input$minmax[2]
       if (L > U){
         error = TRUE
       }
@@ -410,10 +382,10 @@ server <- function(input, output, session) {
     
     if (input$dist == "runif"){
       
-      req(input$min) # new
-      req(input$max) # new
+      req(input$minmax)
       
-      L = input$min ; U = input$max
+      L = input$minmax[1] 
+      U = input$minmax[2]
       if (L > U){
         error = TRUE
       }
@@ -496,10 +468,10 @@ server <- function(input, output, session) {
     
     if (input$dist == "runif"){
       
-      req(input$min) # new
-      req(input$max) # new
+      req(input$minmax)
       
-      L = input$min ; U = input$max
+      L = input$minmax[1]
+      U = input$minmax[2]
       if (L > U){
         error = TRUE
       }
@@ -531,10 +503,10 @@ server <- function(input, output, session) {
     
     if (input$dist == "runif"){
       
-      req(input$min) # new
-      req(input$max) # new
+      req(input$minmax)
       
-      L = input$min ; U = input$max
+      L = input$minmax[1] 
+      U = input$minmax[2]
       if (L > U){
         error = TRUE
       }
