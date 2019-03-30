@@ -22,7 +22,7 @@ ui <- fluidPage(
                           "Right skewed" = "rlnorm",
                           "Left skewed" = "rbeta"),
                      selected = "rnorm"),
-        hr(),
+        # hr(),
         
         # Distribution parameters / features ----
         uiOutput("mu"),
@@ -47,42 +47,72 @@ ui <- fluidPage(
       ),
       
       # Informational text ---- 
-      wellPanel(
-        helpText(a(href="https://duke.qualtrics.com/SE/?SID=SV_3L8WjmwQo32cVk9",
-                   target="_blank", "Rate this app!")),
-        helpText(a(href="https://github.com/ShinyEd/ShinyEd/tree/master/CLT_mean",
-                   target="_blank", "View code")),
+      fluidRow(
+        column(width = 3,
+          helpText(a(href="https://duke.qualtrics.com/SE/?SID=SV_3L8WjmwQo32cVk9",
+                     target="_blank", "Rate this app!"))),
+        column(width = 3,
+          helpText(a(href="https://github.com/ShinyEd/ShinyEd/tree/master/CLT_mean",
+                     target="_blank", "View the code"))),
+        column(width = 3,
         helpText(a(href="http://stat.duke.edu/~mc301/shiny/applets.html",
-                   target="_blank", "Check out other apps")),
+                   target="_blank", "Check out other apps"))),
+        column(width = 3,
         helpText(a(href="https://www.coursera.org/course/statistics", 
-                   target="_blank", "Want to learn more for free?"))
+                   target="_blank", "Learn more for free!")))
       )
     ),
     
     mainPanel(
-      # Population plot ----
-      plotOutput("pop.dist"),
-      br(),
-      # Sample plots ----
-      plotOutput("sample.dist"),
-      #  Number of samples ----
-      div(h4(textOutput("num.samples")), align = "center"),
-      br(),
-      # Sampling plot ----
-      plotOutput("sampling.dist"),
-      # Sampling description ----
-      div(textOutput("sampling.descr"), align = "center"),
-      br(),
-      # CLT description ----
-      div(h5(textOutput("CLT.descr"), align = "center"))
+      tabsetPanel(
+        type = "tabs",
+          # First tab ----
+          tabPanel(
+            title = "Population Distribution",
+            # Population plot ----
+            plotOutput("pop.dist", height = "500px"),
+            br()
+          ),
+          # Second tab ----
+          tabPanel(
+            title = "Samples",
+            # Sample plots ----
+            plotOutput("sample.dist"),
+            #  Number of samples ----
+            div(h3(textOutput("num.samples")), align = "center"),
+            br()
+          ),
+          # Third tab ----
+          tabPanel(
+            title = "Sampling Distribution",
+
+             fluidRow(
+               column(width = 7,
+                      br(), br(),
+                      # CLT description ----
+                      div(textOutput("CLT.descr"), align = "justify")),
+               column(width = 5,
+                      br(),
+                      plotOutput("pop.dist.two", width = "85%", height = "200px"))
+               ),
+            
+            fluidRow(
+              column(width = 12,
+                     br(),
+                      # Sampling plot ----
+                      plotOutput("sampling.dist"),
+                      # Sampling description ----
+                      div(textOutput("sampling.descr", inline = TRUE), align = "center"))
+            )
+          )
+        )
+      )
     )
   )
-)
 
 # Define server function --------------------------------------------
 
 seed <- as.numeric(Sys.time())
-
 
 server <- function(input, output, session) {
   
@@ -93,7 +123,7 @@ server <- function(input, output, session) {
       if (input$dist == "rnorm")
       {
         sliderInput("mu",
-                    "Mean",
+                    "Mean:",
                     value = 0,
                     min = -40,
                     max = 50)
@@ -103,11 +133,10 @@ server <- function(input, output, session) {
   # SD slider for Normal distribution ----
   output$sd = renderUI(
     {
-      # req(input$dist) - write-up
       if (input$dist == "rnorm")
       {
         sliderInput("sd",
-                    "Standard deviation",
+                    "Standard deviation:",
                     value = 20,
                     min = 1,
                     max = 30)
@@ -127,6 +156,22 @@ server <- function(input, output, session) {
                     max = 20)
       }
     })
+  
+  # Making sure range != 0 for uniform distribution ----
+  observeEvent(input$minmax, {
+    
+    req(input$minmax)
+    
+    if (input$minmax[1] == input$minmax[2]){
+      if (input$minmax[1] == 0){
+        updateSliderInput(session, "minmax", value = c(0, 1))
+      } else if (input$minmax[2] == 20){
+        updateSliderInput(session, "minmax", value = c(19, 20))
+      } else {
+        updateSliderInput(session, "minmax", value = c(input$minmax[2], input$minmax[2] + 1))
+      }
+    }
+  })
   
   # skew slider for rlnorm and rbeta ----
   output$skew = renderUI(
@@ -180,13 +225,14 @@ server <- function(input, output, session) {
     
     else if (dist == "runif"){
       req(min, max)
-      vals = do.call(dist, list(n=n, min=min, max=max)) # new
+      vals = do.call(dist, list(n=n, min=min, max=max))
     }
     return(vals)
   }
   
   rep_rand_draw = repeatable(rand_draw)
   
+  # Defining some reactive variables to use later -----
   parent = reactive({
     
     n_sample = 1e5
@@ -205,7 +251,17 @@ server <- function(input, output, session) {
     return(replicate(k, sample(pop, n, replace=TRUE)))
   })
   
-  # plot 1 ----
+  u_min = reactive({
+    req(input$minmax)
+    return(input$minmax[1])
+  })
+  
+  u_max = reactive({
+    req(input$minmax)
+    return(input$minmax[2])
+  })
+  
+  # plot 1 a) ----
   output$pop.dist = renderPlot({
     
     distname = switch(input$dist,
@@ -216,11 +272,8 @@ server <- function(input, output, session) {
     
     pop = parent()
     
-    # m_pop =  round(mean(pop), 2) ????
-    # sd_pop = round(sd(pop), 2) ????
-    
-    m_pop =  round(mean(pop))
-    sd_pop = round(sd(pop))
+    m_pop =  round(mean(pop), 2)
+    sd_pop = round(sd(pop), 2)
     
     pop = tibble(samples = pop)
     pdens = density(pop$samples)
@@ -237,14 +290,14 @@ server <- function(input, output, session) {
                      max(100, max(pop$samples)) - 20)
       
       ggplot(data = pop, aes(x = samples, y = ..density..)) + 
-        geom_histogram(bins = 45, color = "white", fill = "deepskyblue3") +
+        geom_histogram(bins = 45, color = "white", fill = "#195190") +
         # geom_density() + draws a weird baseline. using stat_density() instead.
-        stat_density(geom="line", color = "deepskyblue3", size = 1) +
+        stat_density(geom="line", color = "#195190", size = 1) +
         scale_x_continuous(limits = c(min(-100, pop$samples), max(100, pop$samples))) +
-        labs(title = distname, x = "") +
+        labs(title = distname, x = "x") +
         annotate("text", x = x_pos, y = y_pos,
                  label = paste("mean of x", "=", bquote(.(m_pop)),
-                               "\n", "sd of x", "=", bquote(.(sd_pop))),
+                               "\n", "SD of x", "=", bquote(.(sd_pop))),
                  color = "black", size = 5) +
         theme_gray(base_size = 19) + # better than doing title sizes inside theme().
         theme(plot.title = element_text(hjust = 0.5),
@@ -253,33 +306,38 @@ server <- function(input, output, session) {
       
     } else if (input$dist == "runif"){
       
-      x_pos = max(pop$samples) - 0.1*x_range
-
-      ggplot(data = pop, aes(x = samples, y = ..density..)) +
-        geom_histogram(bins = 45, color = "white", fill = "deepskyblue3") +
-        stat_density(geom = "line", color = "deepskyblue3", size = 1) +
-        scale_y_continuous(expand = expand_scale(mult = c(0, .3))) +
-        labs(title = distname, x = "") +
-        annotate("text", x = x_pos, y = y_pos + 0.5*max(pdens$y),
-                 label = paste("mean of x", "=", bquote(.(m_pop)),
-                               "\n", "sd of x", "=", bquote(.(sd_pop))),
-                 color = "black", size = 5) +
-        theme_gray(base_size = 19) +
-        theme(plot.title = element_text(hjust = 0.5),
-              panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank())
+      if (u_min() == u_max()){ # new new
+        "  " # this is to temporarily prevent graph from displaying while 
+        # observeEvent is fixing the range.
+      } else {
+      
+        x_pos = max(pop$samples) - 0.1*x_range
+  
+        ggplot(data = pop, aes(x = samples, y = ..density..)) +
+          geom_histogram(bins = 45, color = "white", fill = "#195190") +
+          stat_density(geom = "line", color = "#195190", size = 1) +
+          scale_y_continuous(expand = expand_scale(mult = c(0, .3))) +
+          labs(title = distname, x = "x") +
+          annotate("text", x = x_pos, y = y_pos + 0.5*max(pdens$y),
+                   label = paste("mean of x", "=", bquote(.(m_pop)),
+                                 "\n", "SD of x", "=", bquote(.(sd_pop))),
+                   color = "black", size = 5) +
+          theme_gray(base_size = 19) +
+          theme(plot.title = element_text(hjust = 0.5),
+                panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank())}
     
     } else if (input$dist == "rlnorm"){
       
       x_pos = max(pop$samples) - 0.1*x_range
       
       ggplot(data = pop, aes(x = samples, y = ..density..)) + 
-        geom_histogram(bins = 45, color = "white", fill = "deepskyblue3") +
-        stat_density(geom = "line", color = "deepskyblue3", size = 1) +
-        labs(title = distname, x = "") +
+        geom_histogram(bins = 45, color = "white", fill = "#195190") +
+        stat_density(geom = "line", color = "#195190", size = 1) +
+        labs(title = distname, x = "x") +
         annotate("text", x = x_pos, y = y_pos,
                  label = paste("mean of x", "=", bquote(.(m_pop)), 
-                               "\n", "sd of x", "=", bquote(.(sd_pop))),
+                               "\n", "SD of x", "=", bquote(.(sd_pop))),
                  color = "black", size = 5) +
         theme_gray(base_size = 19) +
         theme(plot.title = element_text(hjust = 0.5),
@@ -291,12 +349,12 @@ server <- function(input, output, session) {
       x_pos = min(pop$samples) + 0.1*x_range
       
       ggplot(data = pop, aes(x = samples, y = ..density..)) + 
-        geom_histogram(bins = 45, color = "white", fill = "deepskyblue3") +
-        stat_density(geom = "line", color = "deepskyblue3", size = 1) +
-        labs(title = distname, x = "") +
+        geom_histogram(bins = 45, color = "white", fill = "#195190") +
+        stat_density(geom = "line", color = "#195190", size = 1) +
+        labs(title = distname, x = "x") +
         annotate("text", x = x_pos, y = y_pos, 
                  label = paste("mean of x", "=", bquote(.(m_pop)), 
-                               "\n", "sd of x", "=", bquote(.(sd_pop))),
+                               "\n", "SD of x", "=", bquote(.(sd_pop))),
                  color = "black", size = 5) +
         theme_gray(base_size = 19) +
         theme(plot.title = element_text(hjust = 0.5),
@@ -306,15 +364,119 @@ server <- function(input, output, session) {
       }
   })
   
+  # plot 1 b) ----
+  # this is the population plot in the third tab. (apparently you can't use the
+  # same output id in different tabs.)
+  
+  output$pop.dist.two = renderPlot({
+    
+    distname = switch(input$dist,
+                      rnorm = "Population distribution: Normal",
+                      rlnorm = "Population distribution: Right skewed",
+                      rbeta = "Population distribution: Left skewed",
+                      runif = "Population distribution: Uniform")
+    
+    pop = parent()
+    
+    m_pop =  round(mean(pop)) # no decimals so that they fit in the samller graph
+    sd_pop = round(sd(pop))
+    
+    pop = tibble(samples = pop)
+    pdens = density(pop$samples)
+    
+    x_range = max(pop$samples) - min(pop$samples)
+    y_pos = max(pdens$y) - 0.2*max(pdens$y)
+    
+    if (input$dist == "rnorm"){
+      
+      req(input$mu)
+      mu = input$mu
+      
+      x_pos = ifelse(mu > 0, min(-100, min(pop$samples)) + 20,
+                     max(100, max(pop$samples)) - 20)
+      
+      ggplot(data = pop, aes(x = samples, y = ..density..)) + 
+        geom_histogram(bins = 45, color = "white", fill = "#195190") +
+        stat_density(geom="line", color = "#195190", size = 1) +
+        scale_x_continuous(limits = c(min(-100, pop$samples), max(100, pop$samples))) +
+        labs(title = distname, x = "x") +
+        annotate("text", x = x_pos, y = y_pos,
+                 label = paste("mean of x", "=", bquote(.(m_pop)),
+                               "\n", "SD of x", "=", bquote(.(sd_pop))),
+                 color = "black", size = 3) +
+        theme_gray(base_size = 10) +
+        theme(plot.title = element_text(hjust = 0.5),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank())
+      
+    } else if (input$dist == "runif"){
+      
+      if (u_min() == u_max()){
+        " "
+      } else {
+  
+        x_pos = max(pop$samples) - 0.1*x_range
+        
+        ggplot(data = pop, aes(x = samples, y = ..density..)) +
+          geom_histogram(bins = 45, color = "white", fill = "#195190") +
+          stat_density(geom = "line", color = "#195190", size = 1) +
+          scale_y_continuous(expand = expand_scale(mult = c(0, .3))) +
+          labs(title = distname, x = "x") +
+          annotate("text", x = x_pos, y = y_pos + 0.5*max(pdens$y),
+                   label = paste("mean of x", "=", bquote(.(m_pop)),
+                                 "\n", "SD of x", "=", bquote(.(sd_pop))),
+                   color = "black", size = 3) +
+          theme_gray(base_size = 10) +
+          theme(plot.title = element_text(hjust = 0.5),
+                panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank())}
+      
+    } else if (input$dist == "rlnorm"){
+      
+      x_pos = max(pop$samples) - 0.1*x_range
+      
+      ggplot(data = pop, aes(x = samples, y = ..density..)) + 
+        geom_histogram(bins = 45, color = "white", fill = "#195190") +
+        stat_density(geom = "line", color = "#195190", size = 1) +
+        labs(title = distname, x = "x") +
+        annotate("text", x = x_pos, y = y_pos,
+                 label = paste("mean of x", "=", bquote(.(m_pop)), 
+                               "\n", "SD of x", "=", bquote(.(sd_pop))),
+                 color = "black", size = 3) +
+        theme_gray(base_size = 10) +
+        theme(plot.title = element_text(hjust = 0.5),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank())
+      
+    } else if (input$dist == "rbeta"){
+      
+      x_pos = min(pop$samples) + 0.1*x_range
+      
+      ggplot(data = pop, aes(x = samples, y = ..density..)) + 
+        geom_histogram(bins = 45, color = "white", fill = "#195190") +
+        stat_density(geom = "line", color = "#195190", size = 1) +
+        labs(title = distname, x = "x") +
+        annotate("text", x = x_pos, y = y_pos, 
+                 label = paste("mean of x", "=", bquote(.(m_pop)), 
+                               "\n", "SD of x", "=", bquote(.(sd_pop))),
+                 color = "black", size = 3) +
+        theme_gray(base_size = 10) +
+        theme(plot.title = element_text(hjust = 0.5),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank())
+      
+    }
+  })
+  
   # plot 2 ----
   output$sample.dist = renderPlot({
-
-    # par(mfrow=c(3,3)) ?????
+    
     x = samples()
 
     par(mfrow=c(2,4))
 
     for(i in 1:8){
+      par(bg = "gray95") # new new
       BHH2::dotPlot(x[,i], col = COL[2,3],
                     main = paste("Sample",i),
                     xlab = "", pch=19,
@@ -371,21 +533,31 @@ server <- function(input, output, session) {
     y_pos = max(ndens$y) - 0.1*max(ndens$y)
     x_pos = ifelse(m_samp > 0, min(ndist$means) + 0.1*x_range, 
                    max(ndist$means) - 0.1*x_range)
-      
-    ggplot(data = ndist, aes(x = means, y = ..density..)) +
-      geom_histogram(bins = 20, color = "white", fill = "chartreuse4") +
-      stat_density(geom = "line", color = "chartreuse4", size = 1) +
+    
+    p = ggplot(data = ndist, aes(x = means, y = ..density..)) +
+      geom_histogram(bins = 20, color = "white", fill = "#009499") +
+      stat_density(geom = "line", color = "#009499", size = 1) +
       labs(title = paste("Sampling Distribution*"),
            x = "Sample means") +
       annotate("text", x = x_pos, y = y_pos,
-               label = paste("mean", "=", bquote(.(m_pop)),
-                             "\n", "sd", "=", bquote(.(sd_pop))),
+               label = paste("mean of x_bar", "=", bquote(.(m_samp)),
+                             "\n", "SE of x_bar", "=", bquote(.(sd_samp))),
                color = "black", size = 5) +
       theme_gray(base_size = 19) +
-      theme(plot.title = element_text(hjust = 0.45),
+      theme(plot.title = element_text(hjust = 0.5),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank())
-
+    
+    if (input$dist == "runif"){ # new new
+      
+      if (u_min() == u_max()){
+        " "
+      } else {
+        p
+      }
+    } else {
+      p
+   }
   })
 
   # description for sampling distribution plot ----
@@ -399,8 +571,8 @@ server <- function(input, output, session) {
 
     k = input$k
     n = input$n
-    paste("*Distribution of means of", k, "random samples,\n
-          each consisting of", n, " observations\n
+    paste("*Distribution of means of", k, "random samples,
+          each consisting of", n, " observations
           from a", distname)
     })
 
@@ -413,13 +585,14 @@ server <- function(input, output, session) {
 
     n = input$n
     se=round(s_pop/sqrt(n),2)
-    paste("According to the Central Limit Theorem (CLT), the distribution of sample means
+    paste0("According to the Central Limit Theorem (CLT), the distribution of sample means
           (the sampling distribution) should be nearly normal. The mean of
           the sampling distribution should be approximately equal to the population mean (", m_pop, ")
           and the standard error (the standard deviation of
           sample means) should be approximately equal to the SD of the population divided by square root of
           sample size (", s_pop,
-          "/sqrt(",n, ") =", se,").")
+          "/sqrt(",n, ") = ", se,"). Below is our sampling distribution graph. To help compare, 
+          population distribution plot is also displayed on the right.")
   })
 }
 # Create the Shiny app object ---------------------------------------
