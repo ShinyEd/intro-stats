@@ -378,8 +378,8 @@ server <- function(input, output, session) {
     
     pop = parent()
     
-    m_pop =  round(mean(pop)) # no decimals so that they fit in the samller graph
-    sd_pop = round(sd(pop))
+    m_pop =  round(mean(pop),2)
+    sd_pop = round(sd(pop),2)
     
     pop = tibble(samples = pop)
     pdens = density(pop$samples)
@@ -392,8 +392,8 @@ server <- function(input, output, session) {
       req(input$mu)
       mu = input$mu
       
-      x_pos = ifelse(mu > 0, min(-100, min(pop$samples)) + 20,
-                     max(100, max(pop$samples)) - 20)
+      x_pos = ifelse(mu > 0, min(-100, min(pop$samples)) + 27,
+                     max(100, max(pop$samples)) - 27)
       
       ggplot(data = pop, aes(x = samples, y = ..density..)) + 
         geom_histogram(bins = 45, color = "white", fill = "#195190") +
