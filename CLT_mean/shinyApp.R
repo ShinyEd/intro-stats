@@ -78,7 +78,7 @@ ui <- fluidPage(
             title = "Samples",
             # Sample plots ----
             plotOutput("sample.dist"),
-            #  Number of samples ----
+            #  Number of samples text ----
             div(h3(textOutput("num.samples")), align = "center"),
             br()
           ),
@@ -93,6 +93,7 @@ ui <- fluidPage(
                       div(textOutput("CLT.descr"), align = "justify")),
                column(width = 5,
                       br(),
+                      # Population plot ----
                       plotOutput("pop.dist.two", width = "85%", height = "200px"))
                ),
             
@@ -119,7 +120,6 @@ server <- function(input, output, session) {
   # Mean slider for Normal distribution ----
   output$mu = renderUI(
     {
-      # req(input$dist)
       if (input$dist == "rnorm")
       {
         sliderInput("mu",
@@ -157,7 +157,7 @@ server <- function(input, output, session) {
       }
     })
   
-  # Making sure range != 0 for uniform distribution ----
+  # Making sure range for uniform distribution != 0 ----
   observeEvent(input$minmax, {
     
     req(input$minmax)
@@ -232,7 +232,7 @@ server <- function(input, output, session) {
   
   rep_rand_draw = repeatable(rand_draw)
   
-  # Defining some reactive variables to use later -----
+  # Defining some reactive variables to use later ----
   parent = reactive({
     
     n_sample = 1e5
@@ -244,7 +244,6 @@ server <- function(input, output, session) {
   samples = reactive({
     
     pop = parent()
-    
     n = input$n
     k = input$k
     
@@ -365,7 +364,8 @@ server <- function(input, output, session) {
   })
   
   # plot 1 b) ----
-  # this is the population plot in the third tab. (apparently you can't use the
+  # this is the population plot in the third tab. it is plot 1 a) with a few
+  # changes to make it fit the smaller pace in the tab. (apparently you can't use the
   # same output id in different tabs.)
   
   output$pop.dist.two = renderPlot({
@@ -476,7 +476,7 @@ server <- function(input, output, session) {
     par(mfrow=c(2,4))
 
     for(i in 1:8){
-      par(bg = "gray95") # new new
+      par(bg = "gray95")
       BHH2::dotPlot(x[,i], col = COL[2,3],
                     main = paste("Sample",i),
                     xlab = "", pch=19,
@@ -548,7 +548,7 @@ server <- function(input, output, session) {
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank())
     
-    if (input$dist == "runif"){ # new new
+    if (input$dist == "runif"){
       
       if (u_min() == u_max()){
         " "
