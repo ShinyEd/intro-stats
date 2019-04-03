@@ -4,6 +4,7 @@ library(shiny)
 library(tidyverse)
 library(openintro)
 library(gridExtra)
+library(patchwork)
 library(BHH2)
 
 # Define UI --------------------------------------------------------------------
@@ -77,7 +78,8 @@ ui <- fluidPage(
           tabPanel(
             title = "Samples",
             # Sample plots ----
-            plotOutput("sample.dist"),
+            br(),
+            plotOutput("sample.dist", height = "600px"),
             #  Number of samples text ----
             div(h3(textOutput("num.samples")), align = "center"),
             br()
@@ -298,14 +300,14 @@ server <- function(input, output, session) {
                  label = paste("mean of x", "=", bquote(.(m_pop)),
                                "\n", "SD of x", "=", bquote(.(sd_pop))),
                  color = "black", size = 5) +
-        theme_gray(base_size = 19) + # better than doing title sizes inside theme().
+        theme_light(base_size = 19) + # better than doing title sizes inside theme().
         theme(plot.title = element_text(hjust = 0.5),
               panel.grid.major = element_blank(),
               panel.grid.minor = element_blank())
       
     } else if (input$dist == "runif"){
       
-      if (u_min() == u_max()){ # new new
+      if (u_min() == u_max()){
         "  " # this is to temporarily prevent graph from displaying while 
         # observeEvent is fixing the range.
       } else {
@@ -321,7 +323,7 @@ server <- function(input, output, session) {
                    label = paste("mean of x", "=", bquote(.(m_pop)),
                                  "\n", "SD of x", "=", bquote(.(sd_pop))),
                    color = "black", size = 5) +
-          theme_gray(base_size = 19) +
+          theme_light(base_size = 10) +
           theme(plot.title = element_text(hjust = 0.5),
                 panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank())}
@@ -338,7 +340,7 @@ server <- function(input, output, session) {
                  label = paste("mean of x", "=", bquote(.(m_pop)), 
                                "\n", "SD of x", "=", bquote(.(sd_pop))),
                  color = "black", size = 5) +
-        theme_gray(base_size = 19) +
+        theme_light(base_size = 10) +
         theme(plot.title = element_text(hjust = 0.5),
               panel.grid.major = element_blank(),
               panel.grid.minor = element_blank())
@@ -355,7 +357,7 @@ server <- function(input, output, session) {
                  label = paste("mean of x", "=", bquote(.(m_pop)), 
                                "\n", "SD of x", "=", bquote(.(sd_pop))),
                  color = "black", size = 5) +
-        theme_gray(base_size = 19) +
+        theme_light(base_size = 10) +
         theme(plot.title = element_text(hjust = 0.5),
               panel.grid.major = element_blank(),
               panel.grid.minor = element_blank())
@@ -365,7 +367,7 @@ server <- function(input, output, session) {
   
   # plot 1 b) ----
   # this is the population plot in the third tab. it is plot 1 a) with a few
-  # changes to make it fit the smaller pace in the tab. (apparently you can't use the
+  # changes to make it fit the smaller pace in the tab. (apparently not possible to use the
   # same output id in different tabs.)
   
   output$pop.dist.two = renderPlot({
@@ -404,7 +406,7 @@ server <- function(input, output, session) {
                  label = paste("mean of x", "=", bquote(.(m_pop)),
                                "\n", "SD of x", "=", bquote(.(sd_pop))),
                  color = "black", size = 3) +
-        theme_gray(base_size = 10) +
+        theme_light(base_size = 10) +
         theme(plot.title = element_text(hjust = 0.5),
               panel.grid.major = element_blank(),
               panel.grid.minor = element_blank())
@@ -426,7 +428,7 @@ server <- function(input, output, session) {
                    label = paste("mean of x", "=", bquote(.(m_pop)),
                                  "\n", "SD of x", "=", bquote(.(sd_pop))),
                    color = "black", size = 3) +
-          theme_gray(base_size = 10) +
+          theme_light(base_size = 10) +
           theme(plot.title = element_text(hjust = 0.5),
                 panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank())}
@@ -443,7 +445,7 @@ server <- function(input, output, session) {
                  label = paste("mean of x", "=", bquote(.(m_pop)), 
                                "\n", "SD of x", "=", bquote(.(sd_pop))),
                  color = "black", size = 3) +
-        theme_gray(base_size = 10) +
+        theme_light(base_size = 10) +
         theme(plot.title = element_text(hjust = 0.5),
               panel.grid.major = element_blank(),
               panel.grid.minor = element_blank())
@@ -460,7 +462,7 @@ server <- function(input, output, session) {
                  label = paste("mean of x", "=", bquote(.(m_pop)), 
                                "\n", "SD of x", "=", bquote(.(sd_pop))),
                  color = "black", size = 3) +
-        theme_gray(base_size = 10) +
+        theme_light(base_size = 10) +
         theme(plot.title = element_text(hjust = 0.5),
               panel.grid.major = element_blank(),
               panel.grid.minor = element_blank())
@@ -471,28 +473,40 @@ server <- function(input, output, session) {
   # plot 2 ----
   output$sample.dist = renderPlot({
     
-    x = samples()
-
-    par(mfrow=c(2,4))
+    y = samples()
+    x = samples() %>% as_tibble()
+    
+    plots = list(rep(NA, 8))
 
     for(i in 1:8){
-      par(bg = "gray95")
-      BHH2::dotPlot(x[,i], col = COL[2,3],
-                    main = paste("Sample",i),
-                    xlab = "", pch=19,
-                    ylim = c(0,2), xlim = c(min(-100,x),max(100,x)),
-                    cex.main = 1.5, cex.axis = 1.5, cex.lab = 1.5)
-      box()
-      mean_samp = round(mean(x[,i]),2)
-      sd_samp = round(sd(x[,i]),2)
-      legend("topright",
-             legend=bquote(atop(bar(x)[.(i)]==.(mean_samp),
-                                s[.(i)]==.(sd_samp))),
-             bty = "n", cex = 1.5, text.font = 2)
-      abline(v=mean_samp, col=COL[2],lwd=2)
+      
+      mean = round(mean(y[,i]), 2)
+      sd = round(sd(y[,i]), 2)
+      
+      x_range = max(y[,i]) - min(y[,i])
+      pdens = density(y[,i])
+      
+      x_pos = ifelse(input$dist == "rbeta", min(y[,i]) + 0.1*x_range, 
+                     max(y[,i]) - 0.1*x_range)
+      
+      plots[[i]] = ggplot(x, aes_string(x = paste0("V", i))) +
+        geom_dotplot(alpha = 0.8, dotsize = 0.7) +
+        labs(title = paste("Sample", i), x = "", y = "") +
+        theme_light(base_size = 13) +
+        annotate("text", x = x_pos, y = 1.8,
+                 label = paste("x_bar", "=", bquote(.(mean)),
+                               "\n", "SD", "=", bquote(.(sd))),
+                 color = "black", size = 3) +
+        scale_y_continuous(limits = c(0,2), breaks = NULL) +
+        theme(plot.title = element_text(hjust = 0.5),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank())
     }
     
+    grid.arrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], plots[[5]],
+      plots[[6]], plots[[7]], plots[[8]], ncol = 4)
   })
+  
   
   
   # text for sample plots ----
@@ -543,7 +557,7 @@ server <- function(input, output, session) {
                label = paste("mean of x_bar", "=", bquote(.(m_samp)),
                              "\n", "SE of x_bar", "=", bquote(.(sd_samp))),
                color = "black", size = 5) +
-      theme_gray(base_size = 19) +
+      theme_light(base_size = 19) +
       theme(plot.title = element_text(hjust = 0.5),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank())
