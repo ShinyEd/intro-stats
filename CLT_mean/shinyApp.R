@@ -4,8 +4,6 @@ library(shiny)
 library(tidyverse)
 library(openintro)
 library(gridExtra)
-library(patchwork)
-library(BHH2)
 
 # Define UI --------------------------------------------------------------------
 
