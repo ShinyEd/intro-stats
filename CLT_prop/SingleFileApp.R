@@ -8,9 +8,9 @@ library(tidyverse)
 
 # Define UI ---------------------------------------------------------
 
-ui <-shinyUI(pageWithSidebar(
+ui <-shinyUI(fluidPage(
   
-  headerPanel("Central Limit Theorem for Proportions"),
+  titlePanel("Central Limit Theorem for Proportions", windowTitle = "CLT for Proportions"),
   
   sidebarPanel(
     wellPanel( # add a different panel for the parameters and for the user feedback
@@ -50,10 +50,11 @@ ui <-shinyUI(pageWithSidebar(
     
     tabsetPanel(type = "tabs",
                 tabPanel("Population Distribution", br(), plotOutput("pop.dist", height = "450px")),
-                tabPanel("Samples", div(h3(textOutput("num.samples")), align ="center"), br(), plotOutput("sample.dist")),
-                tabPanel( "Sampling Distribution", fluidRow( column(8, br(), br(), br(), div(textOutput("CLT.descr"), align = "justify"), br()), 
-                                                             column(4, br(), plotOutput("pop.dist1", height = "200px"))),
-                          plotOutput("sampling.dist", height = "450px") , div(textOutput("plot.descr"), align = "center"), br())
+                tabPanel("Samples", br(), br(), plotOutput("sample.dist"), br(), div(h3(textOutput("num.samples")), align ="center")),
+                tabPanel( "Sampling Distribution", 
+                          fluidRow( column(8, br(), br(), div(textOutput("CLT.descr"), align = "justify"), br()), 
+                          column(4, br(), plotOutput("pop.dist1", height = "200px"))),
+                          plotOutput("sampling.dist") , div(textOutput("plot.descr"), align = "center"), br())
     )
   )
 ))
@@ -116,13 +117,13 @@ server <- shinyServer(function(input, output) {
         scale_x_discrete(limits= c(0, 1)) + theme_light(base_size = 12) +
         theme(plot.title = element_text(hjust = 0.5),
               panel.grid.major = element_blank(),
-              panel.grid.minor = element_blank()) +  labs( x="",  y = "Counts",
-                                                           title = paste("Sample",i), size=14, face="bold")
+              panel.grid.minor = element_blank()) +  
+              labs( x="",  y = "Counts",
+              title = paste("Sample",i), size=14, face="bold")
       
       mean_samp = round(mean(x[,i]),2)
       
       sd_samp = round(sd(x[,i]),2)
-      
       
       y_pos = max(counts$n) + 0.07*max(counts$n)
       
@@ -195,11 +196,11 @@ server <- shinyServer(function(input, output) {
     ggplot(ndist, aes(x=ndist$means, y = ..density..)) +
       geom_histogram(bins = 20, color ="#263056", fill="#98DDDE") +
       stat_density(geom = "line", color = "#263056", size = 2) +
-      labs(title = paste("Sampling distribution*:\n"), x = "Sample means") +
+      labs(title = paste("Sampling distribution*:"), x = "Sample means") +
       annotate("text", x = x_pos, y = y_pos,
-               label = paste("mean of p_hat","=", bquote(.(m_samp)),"\n", "SE of p_hat ", "=", bquote(.(sd_samp))),
+               label = paste("mean of p_hat","=", bquote(.(m_samp)),"\n", "SD of p_hat ", "=", bquote(.(sd_samp))),
                color = "black", size = 5) +
-      theme_light(base_size = 19) +
+      theme_light(base_size = 17) +
       theme(plot.title = element_text(hjust = 0.5),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank()) 
