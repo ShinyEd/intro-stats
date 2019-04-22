@@ -2,7 +2,6 @@
 
 library(shiny)
 library(tidyverse)
-library(openintro)
 library(gridExtra)
 
 # Define UI --------------------------------------------------------------------
