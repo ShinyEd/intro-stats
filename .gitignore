@@ -1,6 +1,8 @@
 /.Rhistory
-
 /dist_calc/.Rhistory
-
 /dist_calc/.DS_Store
 .Rproj.user
+.RData
+.Rhistory
+ShinyEd-revision.Rproj
+rsconnect/
