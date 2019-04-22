@@ -3,5 +3,6 @@
 /dist_calc/.DS_Store
 .Rproj.user
 .RData
-.ShinyEd-revision.Rproj
+.Rhistory
 ShinyEd-revision.Rproj
+rsconnect/
