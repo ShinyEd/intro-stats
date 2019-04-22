@@ -9,7 +9,7 @@ shinyUI(pageWithSidebar(
     
     sliderInput("n", 
                 "Sample size:", 
-                value = 20,
+                value = 200,
                 min = 2, 
                 max = 1000),
     br(),
@@ -39,14 +39,13 @@ shinyUI(pageWithSidebar(
   
   
   mainPanel(
-    plotOutput("pop.dist"),
-    br(),
-    plotOutput("sample.dist"),
-    div(h3(textOutput("num.samples")), align = "center"),
-    br(),
-    plotOutput("sampling.dist"),
-    div(textOutput("sampling.descr"), align = "center"),
-    br(),
-    div(h5(textOutput("CLT.descr"), align = "center"))
+    
+    tabsetPanel(type = "tabs",
+                tabPanel("Population Distribution", br(), plotOutput("pop.dist", height = "450px")),
+                tabPanel("Samples", div(h3(textOutput("num.samples")), align ="center"), br(), plotOutput("sample.dist")),
+                tabPanel( "Sampling Distribution", fluidRow( column(8, br(), br(), br(), div(textOutput("CLT.descr"), align = "justify"), br()), 
+                                                             column(4, br(), plotOutput("pop.dist1", height = "200px"))),
+                          plotOutput("sampling.dist", height = "450px") , div(textOutput("plot.descr"), align = "center"), br())
+    )
   )
 ))
