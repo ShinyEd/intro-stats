@@ -1,10 +1,7 @@
 # Load packages -----------------------------------------------------
 library(shiny)
-library(openintro)
 library(gridExtra)
-library(BHH2)
 library(tidyverse)
-
 
 # Define UI ---------------------------------------------------------
 
