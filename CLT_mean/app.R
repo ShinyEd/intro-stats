@@ -45,20 +45,10 @@ ui <- fluidPage(
       ),
       
       # Informational text ---- 
-      fluidRow(
-        column(width = 3,
-          helpText(a(href="https://duke.qualtrics.com/SE/?SID=SV_3L8WjmwQo32cVk9",
-                     target="_blank", "Rate this app!"))),
-        column(width = 3,
-          helpText(a(href="https://github.com/ShinyEd/ShinyEd/tree/master/CLT_mean",
-                     target="_blank", "View the code"))),
-        column(width = 3,
-        helpText(a(href="http://stat.duke.edu/~mc301/shiny/applets.html",
-                   target="_blank", "Check out other apps"))),
-        column(width = 3,
-        helpText(a(href="https://www.coursera.org/course/statistics", 
-                   target="_blank", "Learn more for free!")))
-      )
+      helpText(a(href="https://github.com/ShinyEd/ShinyEd/tree/master/CLT_mean", target="_blank", "View the code")),
+      helpText(a(href="http://shinyed.github.io/intro-stats", target="_blank", "Check out other apps")),
+      helpText(a(href="https://openintro.org", target="_blank", "Learn more for free!"))
+
     ),
     
     mainPanel(

@@ -1,24 +1,17 @@
 # Derived from http://econometricsbysimulation.shinyapps.io/OLS-App/
 
-# set mirror
-options(repos=structure(c(CRAN="http://cran.rstudio.com")))
+# Load packages ----------------------------------------------------------------
+library(shiny)
+library(openintro)
+library(plotrix)
 
-if (!("shiny" %in% names(installed.packages()[,"Package"]))) {install.packages("shiny")}
-suppressMessages(library(shiny, quietly = TRUE))
-
-if (!("openintro" %in% names(installed.packages()[,"Package"]))) {install.packages("openintro")}
-suppressMessages(library(openintro, quietly = TRUE))
-
-if (!("plotrix" %in% names(installed.packages()[,"Package"]))) {install.packages("plotrix")}
-suppressMessages(library(plotrix, quietly = TRUE))
-
+# Define inputs ----------------------------------------------------------------
 input <- list(rseed=1)
+seed <- as.numeric(Sys.time())
 
-seed = as.numeric(Sys.time())
-
-# A function for generating the data.
+# Fundtion for generating the data ---------------------------------------------
 draw.data <- function(type){
-
+  
   n <- 250
   if(type=="linear.up"){
     x <- c(runif(n-2, 0, 4), 2, 2.1)
@@ -44,8 +37,45 @@ draw.data <- function(type){
   data.frame(x=x,y=y)
 }
 
+# UI ---------------------------------------------------------------------------
+ui <- pageWithSidebar(
 
-shinyServer(function(input, output) {
+  # Title ----
+  headerPanel("Diagnostics for simple linear regression"),
+  
+  # Sidebar ----
+  sidebarPanel(
+    
+    radioButtons("type", "Select a trend:",
+                 list("Linear up" = "linear.up",
+                      "Linear down" = "linear.down",
+                      "Curved up" = "curved.up",
+                      "Curved down" = "curved.down",
+                      "Fan-shaped" = "fan.shaped")),
+    br(),
+    
+    checkboxInput("show.resid", "Show residuals", FALSE),
+    
+    br(),
+    
+    helpText("This app uses ordinary least squares (OLS) to fit a regression line to the data with the selected trend. The app is designed to help you practice evaluating whether or not the linear model is an appropriate fit to the data. The three diagnostic plots on the lower half of the page are provided to help you identify undesirable patterns in the residuals that may arise from non-linear trends in the data."),
+    br(),
+    
+    helpText(a(href="https://github.com/ShinyEd/ShinyEd/tree/master/slr_diag", target="_blank", "View code")),
+    helpText(a(href="http://shinyed.github.io/intro-stats", target="_blank", "Check out other apps")),
+    helpText(a(href="https://openintro.org", target="_blank", "Want to learn more for free?"))),
+  
+  # Main panel ----
+  mainPanel(
+    plotOutput("scatter"),
+    br(),
+    br(),
+    plotOutput("residuals")
+  )
+)
+
+# Server -----------------------------------------------------------------------
+server <- function(input, output) {
   
   mydata <- reactive({
     draw.data(input$type)
@@ -56,16 +86,14 @@ shinyServer(function(input, output) {
     lm(regress.exp, data=mydata())
   })
   
-  
-  
   # Show plot of points, regression line, residuals
   output$scatter <- renderPlot({
     data1 <- mydata()
     x <- data1$x
     y <- data1$y
     
-    #used for confidence interval
-    xcon <- seq(min(x)-.1, max(x)+.1, .025)
+    # For confidence interval
+    xcon <- seq(min(x) - 0.1, max(x) + 0.1, 0.025)
     
     predictor <- data.frame(x=xcon)
     
@@ -73,7 +101,7 @@ shinyServer(function(input, output) {
     yline <- predict(lmResults(), predictor)
     
     par(cex.main=1.5, cex.lab=1.5, cex.axis=1.5, mar = c(4,4,4,1))
- 
+    
     r.squared = round(summary(lmResults())$r.squared, 4)
     corr.coef = round(sqrt(r.squared), 4)
     
@@ -83,14 +111,14 @@ shinyServer(function(input, output) {
          xlab="x",
          ylab="y",
          main=paste0("Regression Model\n","(R = ", corr.coef,", ", "R-squared = ", r.squared,")"))
-         
-
+    
+    
     newx <- seq(min(data1$x), max(data1$x), length.out=400)
     confs <- predict(lmResults(), newdata = data.frame(x=newx), 
                      interval = 'confidence')
     preds <- predict(lmResults(), newdata = data.frame(x=newx), 
                      interval = 'predict')
-
+    
     polygon(c(rev(newx), newx), c(rev(preds[ ,3]), preds[ ,2]), col = grey(.95), border = NA)
     polygon(c(rev(newx), newx), c(rev(confs[ ,3]), confs[ ,2]), col = grey(.75), border = NA)
     
@@ -125,4 +153,7 @@ shinyServer(function(input, output) {
     qqnorm(residuals, pch=19, col = COL[1,2], main = "Normal Q-Q Plot of Residuals")
     qqline(residuals, col = COL[1], lwd = 2)
   }, height=280 )
-})
+}
+
+# Create the Shiny app object --------------------------------------------------
+shinyApp(ui = ui, server = server)

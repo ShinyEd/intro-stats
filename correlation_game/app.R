@@ -1,10 +1,9 @@
-# Load packages -----------------------------------------------------
+# Load packages ----------------------------------------------------------------
 require(shiny)
 require(ggplot2)
 require(ellipse)
 
-# Define UI ---------------------------------------------------------
-
+# Define UI --------------------------------------------------------------------
 ui <- fluidPage(
   
   tags$head(
@@ -29,7 +28,14 @@ ui <- fluidPage(
            h5(textOutput("status3"),style="font-weight=500; color: #FF0000;"),
            br(),
            actionButton("submit","Submit"),
-           actionButton("newplot","New Plot")
+           actionButton("newplot","New Plot"),
+           # Informational text ---- 
+           br(),
+           br(),
+           helpText(a(href="https://github.com/ShinyEd/intro-stats/tree/master/correlation_game", target="_blank", "View the code")),
+           helpText(a(href="http://shinyed.github.io/intro-stats", target="_blank", "Check out other apps")),
+           helpText(a(href="https://openintro.org", target="_blank", "Learn more for free!"))
+           
     ),
     
     column(width=8,

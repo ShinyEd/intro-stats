@@ -1,7 +1,0 @@
----
-layout: default
-date:   2015-01-20
-photo: CLT_prop.png
-caption_header: CLT for proportions&nbsp;&nbsp;&nbsp;<a href="https://gallery.shinyapps.io/CLT_prop"><i class="fa fa-external-link"></i></a>
-caption: Central limit theorem for distribution of sample proportions for varying sample sizes and proportions of success.
----
