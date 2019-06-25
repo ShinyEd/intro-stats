@@ -1,7 +1,0 @@
----
-layout: default
-date:   2015-01-20
-photo: dist_calc.png
-caption_header: Distribution calculator&nbsp;&nbsp;&nbsp;<a href="https://gallery.shinyapps.io/dist_calc"><i class="fa fa-external-link"></i></a>
-caption: Calculate probabilities under the normal, binomial, t, F, and chi-square distributions.
----

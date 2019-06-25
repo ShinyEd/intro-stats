@@ -1,7 +1,0 @@
----
-layout: default
-date:   2015-01-20
-photo: slr_diag.png
-caption_header: Diagnostics for simple linear regression&nbsp;&nbsp;&nbsp;<a href="https://gallery.shinyapps.io/slr_diag"><i class="fa fa-external-link"></i></a>
-caption: Diagnostic plots for simple linear regression where the variables have a linear up/down, curved up/down, and fan-shaped relationship.
----

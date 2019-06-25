@@ -1,7 +1,0 @@
-name: ShinyEd
-markdown: redcarpet
-pygments: true
-permalink: /:year/:month/:title/
-url: https://stat.duke.edu/~mc301/shinyed/
-author:
-    name: Mine Cetinkaya-Rundel

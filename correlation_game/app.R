@@ -1,20 +1,57 @@
-#server.R
-
-install.packages("ggplot2")
-install.packages("ellipse")
+# Load packages ----------------------------------------------------------------
 require(shiny)
 require(ggplot2)
 require(ellipse)
 
-shinyServer(
+# Define UI --------------------------------------------------------------------
+ui <- fluidPage(
   
-  func=function(input, output, clientData, session) {
+  tags$head(
+    tags$style(HTML("
+                    @import url('//fonts.googleapis.com/css?family=Lobster|Cabin:400,700');
+                    "))
+    ),
+  
+  titlePanel("Correlation Game"),
+  
+  fluidRow(
+    column(width=4,
+           selectInput("difficulty",label="Difficulty",choices=list("Easy","Medium","Hard")),
+           h5(textOutput("score")),
+           br(),
+           checkboxGroupInput(inputId="options", label="Show:",choices=list("Averages","Standard deviation line","Ellipse")),
+           br(),
+           sliderInput("slider",label="The correlation between X and Y is...",min=-1,max=1,value=0,step=0.01),
+           br(),
+           p(textOutput("status1"),style="font-weight=500; color: #000000;"),
+           h5(textOutput("status2"),style="font-weight=500; color: #00CC00;"),
+           h5(textOutput("status3"),style="font-weight=500; color: #FF0000;"),
+           br(),
+           actionButton("submit","Submit"),
+           actionButton("newplot","New Plot"),
+           # Informational text ---- 
+           br(),
+           br(),
+           helpText(a(href="https://github.com/ShinyEd/intro-stats/tree/master/correlation_game", target="_blank", "View the code")),
+           helpText(a(href="http://shinyed.github.io/intro-stats", target="_blank", "Check out other apps")),
+           helpText(a(href="https://openintro.org", target="_blank", "Learn more for free!"))
+           
+    ),
+    
+    column(width=8,
+           plotOutput("plot1",width="400px",height="400px"))
+    
+  )
+    )
 
+# Define server function --------------------------------------------
+server <- function(input, output, clientData, session) {
+    
     #session-specific variables
     correlation <- -1 #current correlation
     score <- 0 #user's score
     answered <- FALSE # an indicator for whether question has been answered
-
+    
     observe({
       #this observer monitors when input$submit is invalidated
       #and displays the answer
@@ -107,28 +144,28 @@ shinyServer(
       
       isolate({
         observe({
-            
+          
           options=is.na(pmatch(c("Averages", "Standard deviation line","Ellipse"),input$options))
-            output$plot1 <- renderPlot({
-              p <- ggplot(data,aes(X,Y))+
-                geom_point(size=4,alpha=1/2)+
-                theme(text=element_text(size=20))+
-                coord_cartesian(xlim=c(min(data$X)-sd(data$X),max(data$X)+sd(data$X)),ylim=c(min(data$Y)-sd(data$Y),max(data$Y)+sd(data$Y)))
-              if (!options[1]){
-                p<-p+geom_vline(xintercept=mean(data$X),color="#569BBD")+
-                  geom_hline(yintercept=mean(data$Y),color="#569BBD")+
-                  geom_text(label="bar(X)",x=mean(data$X)+0.1*sd(data$X),y=mean(data$Y)+sd(data$Y),parse=TRUE)+
-                  geom_text(label="bar(Y)",x=mean(data$X)+sd(data$X),y=mean(data$Y)+0.1*sd(data$Y),parse=TRUE)
-              }
-              if (!options[2]){
-                p<-p+geom_abline(intercept=intercept,slope=slope,color="#569BBD")
-              }
-              if (!options[3]){
-                p<-p+geom_path(data=data_ellipse,aes(x=X,y=Y),size=1,linetype=2,color="#569BBD")
-              }
-              print(p)
-            })
-         })
+          output$plot1 <- renderPlot({
+            p <- ggplot(data,aes(X,Y))+
+              geom_point(size=4,alpha=1/2)+
+              theme(text=element_text(size=20))+
+              coord_cartesian(xlim=c(min(data$X)-sd(data$X),max(data$X)+sd(data$X)),ylim=c(min(data$Y)-sd(data$Y),max(data$Y)+sd(data$Y)))
+            if (!options[1]){
+              p<-p+geom_vline(xintercept=mean(data$X),color="#569BBD")+
+                geom_hline(yintercept=mean(data$Y),color="#569BBD")+
+                geom_text(label="bar(X)",x=mean(data$X)+0.1*sd(data$X),y=mean(data$Y)+sd(data$Y),parse=TRUE)+
+                geom_text(label="bar(Y)",x=mean(data$X)+sd(data$X),y=mean(data$Y)+0.1*sd(data$Y),parse=TRUE)
+            }
+            if (!options[2]){
+              p<-p+geom_abline(intercept=intercept,slope=slope,color="#569BBD")
+            }
+            if (!options[3]){
+              p<-p+geom_path(data=data_ellipse,aes(x=X,y=Y),size=1,linetype=2,color="#569BBD")
+            }
+            print(p)
+          })
+        })
       })
       
       #update radio buttons
@@ -150,11 +187,10 @@ shinyServer(
       
       
     })
-   
+    
     
   }
   
-)
 
 generateData = function(difficulty,numPoints){
   x_center = rnorm(1,0,10)
@@ -173,14 +209,14 @@ generateData = function(difficulty,numPoints){
     }
   }
   else if (difficulty == 2){
-      X = rnorm(numPoints,x_center,x_scale)
-      Y = rnorm(numPoints,rnorm(1)*X,rgamma(1,1)*x_scale)
-      return(data.frame(X,Y))
+    X = rnorm(numPoints,x_center,x_scale)
+    Y = rnorm(numPoints,rnorm(1)*X,rgamma(1,1)*x_scale)
+    return(data.frame(X,Y))
   }
   else{
-      X = rnorm(numPoints,x_center,x_scale)
-      Y = rnorm(numPoints,rnorm(1)*X,rgamma(1,1)*x_scale)
-      return(data.frame(X,Y))
+    X = rnorm(numPoints,x_center,x_scale)
+    Y = rnorm(numPoints,rnorm(1)*X,rgamma(1,1)*x_scale)
+    return(data.frame(X,Y))
   }
 }
 
@@ -213,3 +249,6 @@ generateResponse = function(response){
     print(sample(list("Try again.","Nope!"),1)[[1]])
   }
 }
+
+# Create the Shiny app object ---------------------------------------
+shinyApp(ui = ui, server = server)
