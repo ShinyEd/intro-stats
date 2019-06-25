@@ -193,7 +193,7 @@ server <- shinyServer(function(input, output) {
     ggplot(ndist, aes(x=ndist$means, y = ..density..)) +
       geom_histogram(bins = 20, color ="#263056", fill="#98DDDE") +
       stat_density(geom = "line", color = "#263056", size = 2) +
-      labs(title = paste("Sampling distribution*:"), x = "Sample means") +
+      labs(title = paste("Sampling distribution*:"), x = "Sample means", y = "") +
       annotate("text", x = x_pos, y = y_pos,
                label = paste("mean of p_hat","=", bquote(.(m_samp)),"\n", "SD of p_hat ", "=", bquote(.(sd_samp))),
                color = "black", size = 5) +

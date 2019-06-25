@@ -549,7 +549,8 @@ server <- function(input, output, session) {
       geom_histogram(bins = 20, color = "white", fill = "#009499") +
       stat_density(geom = "line", color = "#009499", size = 1) +
       labs(title = paste("Sampling Distribution*"),
-           x = "Sample means") +
+           x = "Sample means",
+           y = "") +
       annotate("text", x = x_pos, y = y_pos,
                label = paste("mean of x_bar", "=", bquote(.(m_samp)),
                              "\n", "SE of x_bar", "=", bquote(.(sd_samp))),
