@@ -1,23 +1,18 @@
-# Load packages -----------------------------------------------------
+# Load packages ----------------------------------------------------------------
 library(shiny)
-source('./helper/chiTail.R')
-source('./helper/FTail.R')
-source('./helper/normTail.R')
+library(openintro)
 
-# set mirror
-options(repos=structure(c(CRAN="http://cran.rstudio.com")))
+# Load helper scripts ----------------------------------------------------------
+source("helper/chiTail.R")
+source("helper/FTail.R")
+source("helper/normTail.R")
 
-if (!("shiny" %in% names(installed.packages()[,"Package"]))) {install.packages("shiny")}
-suppressMessages(library(shiny, quietly = TRUE))
-
-if (!("openintro" %in% names(installed.packages()[,"Package"]))) {install.packages("openintro")}
-suppressMessages(library(openintro, quietly = TRUE))
-
+# Set defaults -----------------------------------------------------------------
 defaults = list("tail" = "lower",
                 "lower_bound" = "open",
                 "upper_bound" = "open")
 
-# Define UI ---------------------------------------------------------
+# Define UI --------------------------------------------------------------------
 ui <- pageWithSidebar(
   
   headerPanel("Distribution Calculator"),
@@ -74,7 +69,7 @@ ui <- pageWithSidebar(
   )
 )
 
-# Define server function --------------------------------------------
+# Define server function -------------------------------------------------------
 server <- function(input, output){ 
   output$tail = renderUI(
     {
@@ -810,5 +805,5 @@ server <- function(input, output){
     })
 }
 
-# Create the Shiny app object ---------------------------------------
+# Create the Shiny app object --------------------------------------------------
 shinyApp(ui = ui, server = server)
