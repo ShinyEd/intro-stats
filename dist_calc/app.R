@@ -1,8 +1,10 @@
 # Load packages ----------------------------------------------------------------
+
 library(shiny)
 library(openintro)
 
 # Load helper scripts ----------------------------------------------------------
+
 source("helper/chiTail.R")
 source("helper/FTail.R")
 source("helper/normTail.R")
