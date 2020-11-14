@@ -187,7 +187,6 @@ server <- function(input, output, clientData, session) {
           }
           if (!options[2]) {
             p <- p + geom_abline(intercept = intercept, slope = slope, color = "#569BBD")
-            p <- p + geom_smooth(aes(x = X, y = Y), method = "lm", se = FALSE, color = "red", formula = "y~x", fullrange = TRUE)
           }
           if (!options[3]) {
             p <- p + geom_path(data = data_ellipse, aes(x = X, y = Y), size = 1, linetype = 2, color = "#569BBD")
